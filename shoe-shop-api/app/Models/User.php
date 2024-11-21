@@ -16,7 +16,7 @@ class User extends Authenticatable
         'email',
         'password',
         'is_admin',
-        'cart'
+        'cart' 
     ];
 
     protected $hidden = [
@@ -25,15 +25,10 @@ class User extends Authenticatable
     ];
 
     protected $casts = [
-        'cart' => 'array',
+        'cart' => 'array', 
         'is_admin' => 'boolean'
     ];
 
-    public function carts()
-    {
-        return $this->hasMany(Cart::class);
-    }
-    
     public function orders()
     {
         return $this->hasMany(Order::class);

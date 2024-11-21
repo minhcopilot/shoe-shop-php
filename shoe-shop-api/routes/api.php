@@ -1,21 +1,18 @@
 <?php
 
-use Illuminate\Http\Request;
+// use App\Http\Controllers\CartController;
+
+// Route::middleware('auth:sanctum')->group(function () {
+//     Route::get('/cart', [CartController::class, 'getCart']);
+//     Route::post('/cart', [CartController::class, 'addToCart']);
+//     Route::put('/cart', [CartController::class, 'updateCart']);
+//     Route::delete('/cart', [CartController::class, 'removeFromCart']);
+// });
 use Illuminate\Support\Facades\Route;
-
 use App\Http\Controllers\CartController;
+Route::get('/cart', [CartController::class, 'getCart']);
+Route::post('/cart', [CartController::class, 'addToCart']);
+Route::put('/cart', [CartController::class, 'updateCart']);
+Route::delete('/cart', [CartController::class, 'removeFromCart']);
 
-// Các route của giỏ hàng
-Route::prefix('cart')->group(function() {
-    // Lấy giỏ hàng của người dùng
-    Route::get('/', [CartController::class, 'index']); // API này sẽ trả về giỏ hàng của người dùng
-    
-    // Thêm sản phẩm vào giỏ hàng
-    Route::post('/', [CartController::class, 'store']); // API này thêm sản phẩm vào giỏ hàng
-    
-    // Cập nhật giỏ hàng (số lượng sản phẩm)
-    Route::put('/{id}', [CartController::class, 'update']); // API này cập nhật số lượng
-    
-    // Xóa sản phẩm khỏi giỏ hàng
-    Route::delete('/{id}', [CartController::class, 'destroy']); // API này xóa sản phẩm khỏi giỏ hàng
-});
+
