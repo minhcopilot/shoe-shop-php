@@ -19,6 +19,7 @@ class RegisterRequest extends BaseRequest
             'email' => 'required|email|unique:users,email',
             'password' => 'required|min:6',
             'password_confirmation' => 'required|same:password',
+            'is_admin' => 'required|in:1,0',
         ];
     }
 }
