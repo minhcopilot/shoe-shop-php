@@ -16,11 +16,18 @@ class AuthController extends Controller
     {
         $params = $registerRequest->validated();
         $result = $this->authService->register($params);
+
         if ($result) {
-            return response()->api_success('Register success', $result);
+            return response()->json([
+                'message' => 'Register success',
+                'user' => $result['user'],
+                'access_token' => $result['access_token'],
+            ]);
         }
-        return response()->api_error('Register failed');
+
+        return response()->json(['message' => 'Register failed'], 400);
     }
+
     public function login(LoginRequest $loginRequest)
     {
         $params = $loginRequest->validated();
