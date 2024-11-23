@@ -27,22 +27,44 @@ Route::get('/auth/google/redirect', function () {
 });
 
 Route::get('/auth/google/callback', function () {
-    $gooleUser = Socialite::driver('google')->user();
+    $googleUser = Socialite::driver('google')->user();
 
-    $user = User::updateOrCreate(
-        [
-            'google_id' => $gooleUser->id
-        ],
-        [
-            'name' => $gooleUser->name,
-            'email'=> $gooleUser->email,
-            'password' => Hash::make('12345678'),
-            'email_verified_at' => now()
-        ]
-        );
-    // Đăng nhập người dùng
-    auth()->login($user);
+    // Kiểm tra xem email đã tồn tại trong cơ sở dữ liệu chưa
+    $existingUser = User::where('email', $googleUser->email)->first();
 
-    // Chuyển hướng về trang chủ hoặc trang bất kỳ
-    return redirect('/home')->with('success', 'Logged in successfully using Google!');
+    if ($existingUser) {
+        // Nếu email đã tồn tại, kiểm tra xem google_id đã được liên kết chưa
+        if (!$existingUser->google_id) {
+            // Cập nhật google_id nếu chưa được liên kết
+            $existingUser->update([
+                'google_id' => $googleUser->id,
+            ]);
+        }
+
+        // Trả về token cho người dùng
+        $token = $existingUser->createToken('user')->plainTextToken;
+
+        return response()->json([
+            'message' => 'Login successful',
+            'user' => $existingUser,
+            'access_token' => $token,
+        ]);
+    }
+
+    // Nếu email chưa tồn tại, tạo người dùng mới
+    $user = User::create([
+        'google_id' => $googleUser->id,
+        'name' => $googleUser->name,
+        'email' => $googleUser->email,
+        'password' => Hash::make('12345678'),
+        'email_verified_at' => now(),
+    ]);
+
+    $token = $user->createToken('user')->plainTextToken;
+
+    return response()->json([
+        'message' => 'Login successful',
+        'user' => $user,
+        'access_token' => $token,
+    ]);
 });
