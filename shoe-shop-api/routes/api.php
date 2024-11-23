@@ -14,6 +14,9 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 Route::post('register', [AuthController::class, 'register']);
 Route::post('login', [AuthController::class, 'login'])->name('login');
 
+Route::post('/forgot-password', [AuthController::class, 'sendResetLink']);
+Route::post('/reset-password', [AuthController::class, 'resetPassword']);
+
 // Logout
 Route::middleware('auth:sanctum')->post('logout', [AuthController::class, 'logout']);
 
@@ -63,3 +66,7 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
         return response()->json(['message' => 'Access granted.']);
     });
 });
+
+Route::get('/reset-password/{token}', function ($token) {
+    return response()->json(['token' => $token]);
+})->name('password.reset');

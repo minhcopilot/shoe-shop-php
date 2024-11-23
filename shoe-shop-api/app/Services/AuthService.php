@@ -26,25 +26,25 @@ class AuthService
     }
 
     public function login($params)
-{
-    $user = $this->user->where('email', $params['email'])->first();
+    {
+        $user = $this->user->where('email', $params['email'])->first();
 
-    if (!$user || !Hash::check($params['password'], $user->password)) {
+        if (!$user || !Hash::check($params['password'], $user->password)) {
+            return [
+                'message' => 'Email or password is incorrect',
+                'code' => 401,
+            ];
+        }
+
+        // Tạo token mới cho user
+        $token = $user->createToken('user')->plainTextToken;
+
         return [
-            'message' => 'Email or password is incorrect',
-            'code' => 401,
+            'message' => 'Login success',
+            'code' => 200,
+            'access_token' => $token,
         ];
     }
-
-    // Tạo token mới cho user
-    $token = $user->createToken('user')->plainTextToken;
-
-    return [
-        'message' => 'Login success',
-        'code' => 200,
-        'access_token' => $token,
-    ];
-}
 
     public function logout()
     {

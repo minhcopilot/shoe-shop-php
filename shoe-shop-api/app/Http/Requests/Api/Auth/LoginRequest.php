@@ -15,7 +15,7 @@ class LoginRequest extends BaseRequest
     {
         return [
             'email' => 'required|string|email|exists:users,email',
-            'password' => 'required|min:6',
+            'password' => 'required|min:8',
         ];
     }
 
