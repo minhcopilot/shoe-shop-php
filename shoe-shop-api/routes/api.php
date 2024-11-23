@@ -102,9 +102,9 @@ Route::get('/reset-password/{token}', function ($token) {
 Route::middleware(['auth:sanctum'])->group(function () {
     // Lấy danh sách tất cả người dùng (có thể truy cập bởi tất cả người dùng đã đăng nhập)
     Route::get('/users', [UserController::class, 'index']);
-    Route::get('/users/{id}', [UserController::class, 'show']);
     // Các endpoint chỉ dành cho admin
     Route::middleware(['admin'])->group(function () {
+        Route::get('/users/{id}', [UserController::class, 'show']);
         Route::post('/users', [UserController::class, 'store']); // Create user
         Route::put('/users/{id}', [UserController::class, 'update']); // Update user
         Route::delete('/users/{id}', [UserController::class, 'destroy']); // Delete user
