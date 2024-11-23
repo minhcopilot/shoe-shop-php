@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Support\Facades\Route;
+use Laravel\Socialite\Facades\Socialite;
 use App\Http\Controllers\Api\AuthController;
 
 
@@ -70,3 +71,5 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
 Route::get('/reset-password/{token}', function ($token) {
     return response()->json(['token' => $token]);
 })->name('password.reset');
+
+
