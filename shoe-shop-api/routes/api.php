@@ -1,27 +1,33 @@
 <?php
 
 
-// use App\Http\Controllers\CartController;
-
-// Route::middleware('auth:sanctum')->group(function () {
-//     Route::get('/cart', [CartController::class, 'getCart']);
-//     Route::post('/cart', [CartController::class, 'addToCart']);
-//     Route::put('/cart', [CartController::class, 'updateCart']);
-//     Route::delete('/cart', [CartController::class, 'removeFromCart']);
-// });
 use Illuminate\Http\Request;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CartController;
+
+use App\Http\Controllers\OrderController;
+
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\CategoryController;
 
-Route::get('/cart', [CartController::class, 'getCart']);
-Route::post('/cart', [CartController::class, 'addToCart']);
-Route::put('/cart', [CartController::class, 'updateCart']);
-Route::delete('/cart', [CartController::class, 'removeFromCart']);
 
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/cart', [CartController::class, 'getCart']);
+    Route::post('/cart/add', [CartController::class, 'addToCart']);
+    Route::put('/cart/update', [CartController::class, 'updateCart']);
+    Route::delete('/cart/remove', [CartController::class, 'removeFromCart']);
+});
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/order/add', [OrderController::class, 'createOrder']);
+    Route::put('/order/update/{order}', [OrderController::class, 'updateOrderStatus']);
+    Route::get('/orders', [OrderController::class, 'getOrderHistory']);
+    Route::delete('/order/delete/{order}', [OrderController::class, 'deleteOrder']);
+    Route::get('/orders/search', [OrderController::class, 'searchOrders']);
+});
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
