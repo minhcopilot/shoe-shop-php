@@ -79,17 +79,17 @@ class OrderController extends Controller
         ], 201);
     }
 
-    // Cập nhật trạng thái đơn hàng
+    // Cập nhật đơn hàng
     public function updateOrderStatus(Request $request, $orderId)
     {
         $request->validate([
-            'status' => 'required|string',
+            'address' => 'required|string',
         ]);
 
         $user = Auth::user();
         $order = Order::where('user_id', $user->id)->findOrFail($orderId);
 
-        $order->status = $request->status;
+        $order->address = $request->address;
         $order->save();
 
         return response()->json([
