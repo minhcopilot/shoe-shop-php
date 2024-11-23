@@ -18,7 +18,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'email',
         'password',
         'is_admin',
-        'cart'
+        'cart' 
     ];
 
     protected $hidden = [
@@ -27,7 +27,7 @@ class User extends Authenticatable implements MustVerifyEmail
     ];
 
     protected $casts = [
-        'cart' => 'array',
+        'cart' => 'array', 
         'is_admin' => 'boolean'
     ];
 
@@ -35,6 +35,7 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->hasMany(Order::class);
     }
+
 
     public function setPasswordAttribute($value)
     {
@@ -54,4 +55,5 @@ class User extends Authenticatable implements MustVerifyEmail
 
         return true;
     }
+
 }

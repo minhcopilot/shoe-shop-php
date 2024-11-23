@@ -1,5 +1,23 @@
 <?php
 
+
+// use App\Http\Controllers\CartController;
+
+// Route::middleware('auth:sanctum')->group(function () {
+//     Route::get('/cart', [CartController::class, 'getCart']);
+//     Route::post('/cart', [CartController::class, 'addToCart']);
+//     Route::put('/cart', [CartController::class, 'updateCart']);
+//     Route::delete('/cart', [CartController::class, 'removeFromCart']);
+// });
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\CartController;
+Route::get('/cart', [CartController::class, 'getCart']);
+Route::post('/cart', [CartController::class, 'addToCart']);
+Route::put('/cart', [CartController::class, 'updateCart']);
+Route::delete('/cart', [CartController::class, 'removeFromCart']);
+
+
+=======
 use Illuminate\Http\Request;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Support\Facades\Route;
@@ -70,3 +88,4 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
 Route::get('/reset-password/{token}', function ($token) {
     return response()->json(['token' => $token]);
 })->name('password.reset');
+
