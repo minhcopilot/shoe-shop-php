@@ -18,6 +18,9 @@ class User extends Authenticatable implements MustVerifyEmail
         'email',
         'password',
         'is_admin',
+        'cart',
+        'google_id',
+        'email_verified_at',
         'cart' 
     ];
 
@@ -39,8 +42,8 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function setPasswordAttribute($value)
     {
-        // $this->attributes['password'] = Hash::make($value);
-        $this->attributes['password'] = bcrypt($value);
+        $this->attributes['password'] = Hash::make($value);
+        // $this->attributes['password'] = bcrypt($value);
     }
     
     public function getAccessTokenAttribute()
