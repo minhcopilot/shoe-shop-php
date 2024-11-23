@@ -34,6 +34,11 @@ class User extends Authenticatable implements MustVerifyEmail
         'is_admin' => 'boolean'
     ];
 
+    public function cart()
+    {
+        return $this->hasMany(Cart::class);
+    }
+
     public function orders()
     {
         return $this->hasMany(Order::class);
