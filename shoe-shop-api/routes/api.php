@@ -9,12 +9,13 @@
 //     Route::put('/cart', [CartController::class, 'updateCart']);
 //     Route::delete('/cart', [CartController::class, 'removeFromCart']);
 // });
-use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use Illuminate\Auth\Events\Verified;
-use App\Http\Controllers\CategoryController;
-use App\Http\Controllers\Api\AuthController;
+use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\CategoryController;
 
 Route::get('/cart', [CartController::class, 'getCart']);
 Route::post('/cart', [CartController::class, 'addToCart']);
@@ -98,4 +99,16 @@ Route::get('/reset-password/{token}', function ($token) {
     return response()->json(['token' => $token]);
 })->name('password.reset');
 
-
+Route::middleware(['auth:sanctum'])->group(function () {
+    // Lấy danh sách tất cả người dùng (có thể truy cập bởi tất cả người dùng đã đăng nhập)
+    Route::get('/users', [UserController::class, 'index']);
+    Route::get('/users/{id}', [UserController::class, 'show']);
+    // Các endpoint chỉ dành cho admin
+    Route::middleware(['admin'])->group(function () {
+        Route::post('/users', [UserController::class, 'store']); // Create user
+        Route::put('/users/{id}', [UserController::class, 'update']); // Update user
+        Route::delete('/users/{id}', [UserController::class, 'destroy']); // Delete user
+        Route::get('/users/trashed/all', [UserController::class, 'getTrashed']);
+        Route::put('/users/restore/{id}', [UserController::class, 'restore']);
+    });
+});
