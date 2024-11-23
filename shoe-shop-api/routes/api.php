@@ -35,6 +35,8 @@ Route::group(['prefix' => 'categories', 'as' => 'categories.'], function () {
     Route::put('/restore/{id}', [CategoryController::class, 'restore']);
 });
 
+Route::middleware('auth:sanctum')->get('/auth/user', [AuthController::class, 'getUser']);
+
 // Đăng ký và đăng nhập
 Route::post('register', [AuthController::class, 'register']);
 Route::post('login', [AuthController::class, 'login'])->name('login');
