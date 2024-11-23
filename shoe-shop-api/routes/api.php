@@ -10,18 +10,16 @@
 //     Route::delete('/cart', [CartController::class, 'removeFromCart']);
 // });
 use Illuminate\Support\Facades\Route;
+use Illuminate\Http\Request;
+use Illuminate\Auth\Events\Verified;
+use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\CartController;
+
 Route::get('/cart', [CartController::class, 'getCart']);
 Route::post('/cart', [CartController::class, 'addToCart']);
 Route::put('/cart', [CartController::class, 'updateCart']);
 Route::delete('/cart', [CartController::class, 'removeFromCart']);
-
-use Illuminate\Http\Request;
-use Illuminate\Auth\Events\Verified;
-use Illuminate\Support\Facades\Route;
-use Laravel\Socialite\Facades\Socialite;
-use App\Http\Controllers\CategoryController;
-use App\Http\Controllers\Api\AuthController;
 
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
