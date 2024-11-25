@@ -38,8 +38,8 @@ const LoginForm = () => {
     dispatch(action)
       .then(unwrapResult)
       .then((res) => {
-        localStorage.setItem("token", res.token);
-        if (res.user.isAdmin) history.push("/admin/home");
+        localStorage.setItem("token", res.data.token);
+        if (res.data.user.is_admin) history.push("/admin/home");
         else history.push("/");
       })
       .catch((error) => {
