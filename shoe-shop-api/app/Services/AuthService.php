@@ -21,7 +21,7 @@ class AuthService
 
         return [
             'user' => $user,
-            'access_token' => $token,
+            'token' => $token,
         ];
     }
 
@@ -42,7 +42,8 @@ class AuthService
         return [
             'message' => 'Login success',
             'code' => 200,
-            'access_token' => $token,
+            'token' => $token,
+            'user' => $user,
         ];
     }
 

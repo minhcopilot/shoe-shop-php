@@ -34,16 +34,23 @@ const LoginForm = () => {
   const [error, setError] = useState("");
 
   const handleLogin = (data) => {
-    const action = login(data);
+    const action = login(data); // Action login từ Redux
     dispatch(action)
-      .then(unwrapResult)
+      .then(unwrapResult) // Xử lý kết quả từ Redux
       .then((res) => {
-        localStorage.setItem("token", res.token);
-        if (res.user.isAdmin) history.push("/admin/home");
-        else history.push("/");
+        // In ra message khi đăng nhập thành công
+        console.log(res.message);
+        localStorage.setItem("token", res.data.token);
+  
+        if (res.data.user.is_admin) {
+          history.push("/admin/home");
+        } else {
+          history.push("/");
+        }
       })
       .catch((error) => {
-        if (error.status === 400) setError(error.data.message);
+        // In ra message khi đăng nhập thất bại
+        setError(error.data?.message || "Email or password is incorrect");
       });
   };
 
