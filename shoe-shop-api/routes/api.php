@@ -1,32 +1,45 @@
 <?php
 
 
-// use App\Http\Controllers\CartController;
-
-// Route::middleware('auth:sanctum')->group(function () {
-//     Route::get('/cart', [CartController::class, 'getCart']);
-//     Route::post('/cart', [CartController::class, 'addToCart']);
-//     Route::put('/cart', [CartController::class, 'updateCart']);
-//     Route::delete('/cart', [CartController::class, 'removeFromCart']);
-// });
+use Illuminate\Http\Request;
+use Illuminate\Auth\Events\Verified;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\ProductsController;
+use App\Http\Controllers\SizesController;
 Route::get('/cart', [CartController::class, 'getCart']);
 Route::post('/cart', [CartController::class, 'addToCart']);
 Route::put('/cart', [CartController::class, 'updateCart']);
 Route::delete('/cart', [CartController::class, 'removeFromCart']);
 
-use Illuminate\Http\Request;
-use Illuminate\Auth\Events\Verified;
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\CategoryController;
-use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\OrderController;
 
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\CategoryController;
+
+
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/cart', [CartController::class, 'getCart']);
+    Route::post('/cart/add', [CartController::class, 'addToCart']);
+    Route::put('/cart/update', [CartController::class, 'updateCart']);
+    Route::delete('/cart/remove', [CartController::class, 'removeFromCart']);
+});
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/order/add', [OrderController::class, 'createOrder']);
+    Route::put('/order/update/{order}', [OrderController::class, 'updateOrderStatus']);
+    Route::get('/orders', [OrderController::class, 'getOrderHistory']);
+    Route::delete('/order/delete/{order}', [OrderController::class, 'deleteOrder']);
+    Route::get('/orders/search', [OrderController::class, 'searchOrders']);
+});
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
-Route::group(['prefix' => 'categories', 'as' => 'categories.'], function () {
+//category
+Route::prefix('categories')->group(function ()  {
     Route::get('', [CategoryController::class, 'index']);
     Route::post('', [CategoryController::class, 'store']);
     Route::get('/{category}', [CategoryController::class, 'show']);
@@ -35,6 +48,26 @@ Route::group(['prefix' => 'categories', 'as' => 'categories.'], function () {
     Route::get('/trashed/all', [CategoryController::class, 'getTrashed']);
     Route::put('/restore/{id}', [CategoryController::class, 'restore']);
 });
+// ->middleware('auth:sanctum')
+//Products
+Route::prefix('products')->group(function () {
+    Route::get('/', [ProductsController::class, 'index']); // Lấy danh sách sản phẩm
+    Route::post('/', [ProductsController::class, 'store']); // Thêm sản phẩm
+    Route::get('/{id}', [ProductsController::class, 'show']); // Xem chi tiết sản phẩm
+    Route::put('/{id}', [ProductsController::class, 'update']); // Cập nhật sản phẩm
+    Route::delete('/{id}', [ProductsController::class, 'destroy']); // Soft delete sản phẩm
+    Route::get('/trashed', [ProductsController::class, 'getTrashed']); // Lấy sản phẩm đã soft delete
+    Route::put('/restore/{id}', [ProductsController::class, 'restore']); // Khôi phục sản phẩm
+});
+
+//Size
+Route::prefix('sizes')->group(function () {
+    Route::get('/', [SizesController::class, 'index']);
+    Route::post('/', [SizesController::class, 'store']);
+    Route::put('/{id}', [SizesController::class, 'update']);
+    Route::delete('/{id}', [SizesController::class, 'destroy']);
+});
+Route::middleware('auth:sanctum')->get('/auth/user', [AuthController::class, 'getUser']);
 
 // Đăng ký và đăng nhập
 Route::post('register', [AuthController::class, 'register']);
@@ -97,3 +130,16 @@ Route::get('/reset-password/{token}', function ($token) {
     return response()->json(['token' => $token]);
 })->name('password.reset');
 
+Route::middleware(['auth:sanctum'])->group(function () {
+    // Lấy danh sách tất cả người dùng (có thể truy cập bởi tất cả người dùng đã đăng nhập)
+    Route::get('/users', [UserController::class, 'index']);
+    // Các endpoint chỉ dành cho admin
+    Route::middleware(['admin'])->group(function () {
+        Route::get('/users/{id}', [UserController::class, 'show']);
+        Route::post('/users', [UserController::class, 'store']); // Create user
+        Route::put('/users/{id}', [UserController::class, 'update']); // Update user
+        Route::delete('/users/{id}', [UserController::class, 'destroy']); // Delete user
+        Route::get('/users/trashed/all', [UserController::class, 'getTrashed']);
+        Route::put('/users/restore/{id}', [UserController::class, 'restore']);
+    });
+});

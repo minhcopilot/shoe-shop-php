@@ -95,4 +95,23 @@ class AuthController extends Controller
             'email' => [trans($status)],
         ]);
     }
+
+    public function getUser(Request $request)
+    {
+        // Lấy thông tin người dùng từ access token
+        $user = $request->user();
+
+        if ($user) {
+            return response()->json([
+                'status' => 200,
+                'message' => 'User retrieved successfully',
+                'data' => $user,
+            ]);
+        }
+
+        return response()->json([
+            'status' => 401,
+            'message' => 'Unauthenticated',
+        ], 401);
+    }
 }
