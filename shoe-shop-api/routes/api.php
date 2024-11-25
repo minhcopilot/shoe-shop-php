@@ -5,6 +5,12 @@ use Illuminate\Http\Request;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\ProductsController;
+use App\Http\Controllers\SizesController;
+Route::get('/cart', [CartController::class, 'getCart']);
+Route::post('/cart', [CartController::class, 'addToCart']);
+Route::put('/cart', [CartController::class, 'updateCart']);
+Route::delete('/cart', [CartController::class, 'removeFromCart']);
 
 use App\Http\Controllers\OrderController;
 
@@ -32,7 +38,8 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
-Route::group(['prefix' => 'categories', 'as' => 'categories.'], function () {
+//category
+Route::prefix('categories')->group(function ()  {
     Route::get('', [CategoryController::class, 'index']);
     Route::post('', [CategoryController::class, 'store']);
     Route::get('/{category}', [CategoryController::class, 'show']);
@@ -41,7 +48,25 @@ Route::group(['prefix' => 'categories', 'as' => 'categories.'], function () {
     Route::get('/trashed/all', [CategoryController::class, 'getTrashed']);
     Route::put('/restore/{id}', [CategoryController::class, 'restore']);
 });
+// ->middleware('auth:sanctum')
+//Products
+Route::prefix('products')->group(function () {
+    Route::get('/', [ProductsController::class, 'index']); // Lấy danh sách sản phẩm
+    Route::post('/', [ProductsController::class, 'store']); // Thêm sản phẩm
+    Route::get('/{id}', [ProductsController::class, 'show']); // Xem chi tiết sản phẩm
+    Route::put('/{id}', [ProductsController::class, 'update']); // Cập nhật sản phẩm
+    Route::delete('/{id}', [ProductsController::class, 'destroy']); // Soft delete sản phẩm
+    Route::get('/trashed', [ProductsController::class, 'getTrashed']); // Lấy sản phẩm đã soft delete
+    Route::put('/restore/{id}', [ProductsController::class, 'restore']); // Khôi phục sản phẩm
+});
 
+//Size
+Route::prefix('sizes')->group(function () {
+    Route::get('/', [SizesController::class, 'index']);
+    Route::post('/', [SizesController::class, 'store']);
+    Route::put('/{id}', [SizesController::class, 'update']);
+    Route::delete('/{id}', [SizesController::class, 'destroy']);
+});
 Route::middleware('auth:sanctum')->get('/auth/user', [AuthController::class, 'getUser']);
 
 // Đăng ký và đăng nhập
