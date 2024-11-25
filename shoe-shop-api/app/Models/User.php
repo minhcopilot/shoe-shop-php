@@ -38,7 +38,11 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->hasMany(Order::class);
     }
-
+    
+    public function cart()
+    {
+        return $this->hasMany(Cart::class);
+    }
 
     public function setPasswordAttribute($value)
     {
