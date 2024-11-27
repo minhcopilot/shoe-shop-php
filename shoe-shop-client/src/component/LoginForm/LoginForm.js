@@ -40,9 +40,9 @@ const LoginForm = () => {
       .then((res) => {
         // In ra message khi đăng nhập thành công
         console.log(res.message);
-        localStorage.setItem("token", res.data.token); // Lưu token vào localStorage
 
-        // Chuyển hướng người dùng tới trang chủ hoặc trang admin
+        localStorage.setItem("token", res.data.token);
+
         if (res.data.user.is_admin) {
           history.push("/admin/home");
         } else {

@@ -90,7 +90,5 @@ const authSlice = createSlice({
   },
 });
 
-// Thêm setUser vào danh sách xuất khẩu
 export const { clearUser, setUser, setToken } = authSlice.actions;
-
 export default authSlice.reducer;

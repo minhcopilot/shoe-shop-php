@@ -63,17 +63,21 @@ const AddEditProduct = () => {
 
   useEffect(() => {
     if (location.state) {
+      console.log(location.state.state);
+
       reset({
         name: location.state.state.name,
         desc: location.state.state.desc,
         price: location.state.state.price,
+        images: location.state.state.images,
+        category: location.state.state.category,
         quantity: location.state.state.quantity,
         inStock: location.state.state.inStock
           ? location.state.state.inStock.toString()
           : "true",
       });
       setImagesDisplay(() => {
-        if (!location?.state?.images) {
+        if (!location?.state?.state?.images) {
           return [];
         }
         return location.state.state.images.map((image) => image);
@@ -261,11 +265,7 @@ const AddEditProduct = () => {
                 <Controller
                   rules={{ required: true }}
                   control={control}
-                  defaultValue={
-                    location?.state?.inStock
-                      ? location.state.state.inStock.toString()
-                      : "true"
-                  }
+                  defaultValue={location?.state?.inStock?.toString() || "true"}
                   {...register("inStock")}
                   required
                   render={({ field }) => {
@@ -312,11 +312,7 @@ const AddEditProduct = () => {
                 select
                 variant="outlined"
                 {...register("category")}
-                defaultValue={
-                  location?.state?.state?.category
-                    ? location.state.state.category._id
-                    : ""
-                }
+                defaultValue={location?.state?.state?.category?._id}
                 required
               >
                 {categories?.map((category) => {

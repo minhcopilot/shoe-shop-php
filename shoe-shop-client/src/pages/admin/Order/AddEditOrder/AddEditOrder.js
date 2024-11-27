@@ -10,7 +10,7 @@ import "react-toastify/dist/ReactToastify.css";
 import { updateOrder } from "../../../../redux/slices/orderSlice";
 import { useStyles } from "./styles";
 
-const AddEditOrder = ({ open, handleClose, order }) => {
+const AddEditOrder = ({ open, handleClose, order, updateSuccess }) => {
   const classes = useStyles();
   const dispatch = useDispatch();
   const { register, handleSubmit, reset } = useForm();
@@ -24,6 +24,7 @@ const AddEditOrder = ({ open, handleClose, order }) => {
     dispatch(action)
       .unwrap()
       .then((res) => {
+        updateSuccess(res);
         handleClose();
         setError("");
         reset();

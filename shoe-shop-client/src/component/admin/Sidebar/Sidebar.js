@@ -7,6 +7,7 @@ import {
   BiDoughnutChart,
   BiHomeAlt,
   BiLogOut,
+  BiMessageRoundedDots,
   BiUser,
 } from "react-icons/bi";
 import { useDispatch } from "react-redux";
@@ -65,6 +66,12 @@ const Sidebar = () => {
               <ListItem disableGutters>
                 <BiDoughnutChart className={classes.sidebardIcon} />
                 <ListItemText disableTypography primary={`Kích thước`} />
+              </ListItem>
+            </NavLink>
+            <NavLink className={classes.link} to="/admin/chat">
+              <ListItem disableGutters>
+                <BiMessageRoundedDots className={classes.sidebardIcon} />
+                <ListItemText disableTypography primary={`Chat`} />
               </ListItem>
             </NavLink>
             <Box className={classes.link} onClick={handleLogout}>
