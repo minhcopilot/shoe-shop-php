@@ -41,7 +41,7 @@ const LoginForm = () => {
         // In ra message khi đăng nhập thành công
         console.log(res.message);
         localStorage.setItem("token", res.data.token);
-  
+
         if (res.data.user.is_admin) {
           history.push("/admin/home");
         } else {

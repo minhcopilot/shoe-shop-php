@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\ProductsController;
 use App\Http\Controllers\SizesController;
+use App\Http\Controllers\ChatController;
 Route::get('/cart', [CartController::class, 'getCart']);
 Route::post('/cart', [CartController::class, 'addToCart']);
 Route::put('/cart', [CartController::class, 'updateCart']);
@@ -126,4 +127,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/users/trashed/all', [UserController::class, 'getTrashed']);
         Route::put('/users/restore/{id}', [UserController::class, 'restore']);
     });
+});
+
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/messages', [ChatController::class, 'sendMessage']);
+    Route::get('/messages/{user_id}', [ChatController::class, 'getMessages']);
+    Route::get('/chats', [ChatController::class, 'getChats']);
 });
