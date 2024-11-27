@@ -62,10 +62,18 @@ const authSlice = createSlice({
   name: "auth",
   initialState: {
     user: {},
+    token: localStorage.getItem('token') || null, // Khôi phục token từ localStorage
   },
   reducers: {
     clearUser: (state) => {
       state.user = {};
+      state.token = null;
+    },
+    setUser: (state, action) => {
+      state.user = action.payload;
+    },
+    setToken: (state, action) => {
+      state.token = action.payload;
     },
   },
   extraReducers: {
@@ -76,8 +84,11 @@ const authSlice = createSlice({
     [updateUser.fulfilled]: (state, action) => {
       state.user = action.payload.data.user;
     },
+    [signUp.fulfilled]: (state, action) => {
+      state.user = action.payload.user;
+    },
   },
 });
 
-export const { clearUser } = authSlice.actions;
+export const { clearUser, setUser, setToken } = authSlice.actions;
 export default authSlice.reducer;
