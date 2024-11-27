@@ -3,7 +3,7 @@ import authAPI from "../../api/authApi";
 import paymentAPI from "../../api/paymentApi";
 import userAPI from "../../api/userApi";
 import { getAllUser, getUser } from "../slices/userSlice";
-import axiosClient from "../../api/axiosClient";
+
 export const login = createAsyncThunk(
   "auth/login",
   async (data, { rejectWithValue }) => {
@@ -17,15 +17,15 @@ export const login = createAsyncThunk(
 
 export const signUp = createAsyncThunk(
   "auth/signUp",
-  async (data, { rejectWithValue }) => {
+  async (data, { rejectWithValue, dispatch }) => {
     try {
-      const response = await axiosClient.post("/register", data);
-      return response; // API trả về message, user, và token
+      const result = await authAPI.register(data);
+
+      dispatch(getAllUser());
+
+      return result;
     } catch (error) {
-      if (error.response && error.response.data) {
-        return rejectWithValue(error.response.data); // Trả về lỗi từ API
-      }
-      return rejectWithValue(error.message);
+      return rejectWithValue(error.response);
     }
   }
 );
@@ -62,10 +62,18 @@ const authSlice = createSlice({
   name: "auth",
   initialState: {
     user: {},
+    token: localStorage.getItem('token') || null, // Khôi phục token từ localStorage
   },
   reducers: {
     clearUser: (state) => {
       state.user = {};
+      state.token = null;
+    },
+    setUser: (state, action) => {
+      state.user = action.payload;
+    },
+    setToken: (state, action) => {
+      state.token = action.payload;
     },
   },
   extraReducers: {
@@ -76,8 +84,13 @@ const authSlice = createSlice({
     [updateUser.fulfilled]: (state, action) => {
       state.user = action.payload.data.user;
     },
+    [signUp.fulfilled]: (state, action) => {
+      state.user = action.payload.user;
+    },
   },
 });
 
-export const { clearUser } = authSlice.actions;
+// Thêm setUser vào danh sách xuất khẩu
+export const { clearUser, setUser, setToken } = authSlice.actions;
+
 export default authSlice.reducer;

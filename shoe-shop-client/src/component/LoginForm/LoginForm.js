@@ -10,7 +10,7 @@ import React, { useState } from "react";
 import { useStyles } from "./styles";
 import bgLogin from "../../assets/images/login1.png";
 import bgLogin2 from "../../assets/images/login-2.png";
-import { BiMailSend, BiLockAlt, BiRightArrowAlt } from "react-icons/bi";
+import { BiMailSend, BiLockAlt, BiRightArrowAlt, BiLogoGoogle } from "react-icons/bi"; // Biểu tượng Google
 import { Link, useHistory } from "react-router-dom";
 import * as yup from "yup";
 import { useForm } from "react-hook-form";
@@ -40,8 +40,9 @@ const LoginForm = () => {
       .then((res) => {
         // In ra message khi đăng nhập thành công
         console.log(res.message);
-        localStorage.setItem("token", res.data.token);
-  
+        localStorage.setItem("token", res.data.token); // Lưu token vào localStorage
+
+        // Chuyển hướng người dùng tới trang chủ hoặc trang admin
         if (res.data.user.is_admin) {
           history.push("/admin/home");
         } else {
@@ -52,6 +53,11 @@ const LoginForm = () => {
         // In ra message khi đăng nhập thất bại
         setError(error.data?.message || "Email or password is incorrect");
       });
+  };
+
+  const handleGoogleLogin = async () => {
+    // Chuyển hướng đến Google Login API
+    window.location.href = "http://127.0.0.1:8000/auth/google/redirect";
   };
 
   return (
@@ -85,9 +91,6 @@ const LoginForm = () => {
                   <BiMailSend className={classes.inputIcon} />
                 </InputAdornment>
               ),
-              classes: {
-                input: classes.input,
-              },
             }}
           />
           <TextField
@@ -101,14 +104,21 @@ const LoginForm = () => {
                   <BiLockAlt className={classes.inputIcon} />
                 </InputAdornment>
               ),
-              classes: {
-                input: classes.input,
-              },
             }}
           />
           <Button className={classes.action} type="submit">
             Đăng nhập
           </Button>
+          
+          {/* Nút đăng nhập với Google */}
+          <Button
+            className={classes.actionGoogle}
+            onClick={handleGoogleLogin}
+            startIcon={<BiLogoGoogle />} // Biểu tượng Google
+          >
+            Đăng nhập với Google
+          </Button>
+          
           <Link to="/forgot-password" className={classes.redirect}>
             Quên mật khẩu?
           </Link>

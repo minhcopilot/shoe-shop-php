@@ -64,7 +64,7 @@ const RegisterForm = () => {
       .then(unwrapResult)
       .then((res) => {
         // Thành công -> chuyển hướng đến trang xác minh email
-        localStorage.setItem("authToken", res.token); // Lưu token sau khi đăng ký thành công
+        localStorage.setItem("token", res.token); // Lưu token sau khi đăng ký thành công
         history.push("/verify-email");
       })
       .catch((error) => {
