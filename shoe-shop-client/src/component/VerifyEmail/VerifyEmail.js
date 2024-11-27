@@ -8,8 +8,8 @@ const VerifyEmail = () => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
-  const handleGoToLogin = () => {
-    history.push("/login");
+  const handleGoToHome = () => {
+    history.push("/");
   };
 
   const handleResendVerificationEmail = async () => {
@@ -61,10 +61,10 @@ const VerifyEmail = () => {
       <Button
         variant="contained"
         color="secondary"
-        onClick={handleGoToLogin}
+        onClick={handleGoToHome}
         style={{ marginTop: "20px" }}
       >
-        Quay lại đăng nhập
+        Quay lại trang chủ
       </Button>
     </Box>
   );

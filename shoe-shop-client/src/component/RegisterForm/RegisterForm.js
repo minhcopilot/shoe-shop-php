@@ -7,6 +7,8 @@ import {
   InputAdornment,
   TextField,
   Typography,
+  CircularProgress,  // Import CircularProgress
+  Backdrop,            // Import Backdrop để hiển thị hiệu ứng loading
 } from "@material-ui/core";
 import { BiMailSend, BiLockAlt, BiUser } from "react-icons/bi";
 import { Link, useHistory } from "react-router-dom";
@@ -47,8 +49,10 @@ const RegisterForm = () => {
     resolver: yupResolver(schema),
   });
   const [error, setError] = useState();
+  const [loading, setLoading] = useState(false); // Trạng thái loading
 
   const handleRegister = (data) => {
+    setLoading(true); // Đặt loading là true khi bắt đầu gửi yêu cầu
     const action = signUp({
       name: data.fullName,
       email: data.email,
@@ -57,21 +61,23 @@ const RegisterForm = () => {
       is_admin: "0", // Nếu cần thiết
     });
     dispatch(action)
-    .then(unwrapResult)
-    .then((res) => {
-      // Thành công -> chuyển hướng đến trang xác minh email
-      alert(res.message || "Đăng ký thành công! Vui lòng kiểm tra email của bạn.");
-      localStorage.setItem("authToken", res.token); // Lưu token sau khi đăng ký thành công
-      history.push("/verify-email");
-    })
-    .catch((error) => {
-      // Hiển thị lỗi khi đăng ký thất bại
-      if (error.errors?.email) {
-        setError(error.errors.email[0]); // Lỗi email đã tồn tại
-      } else {
-        setError(error.message || "Đăng ký thất bại!");
-      }
-    });
+      .then(unwrapResult)
+      .then((res) => {
+        // Thành công -> chuyển hướng đến trang xác minh email
+        localStorage.setItem("authToken", res.token); // Lưu token sau khi đăng ký thành công
+        history.push("/verify-email");
+      })
+      .catch((error) => {
+        // Hiển thị lỗi khi đăng ký thất bại
+        if (error.errors?.email) {
+          setError(error.errors.email[0]); // Lỗi email đã tồn tại
+        } else {
+          setError(error.message || "Đăng ký thất bại!");
+        }
+      })
+      .finally(() => {
+        setLoading(false); // Đặt loading là false khi API hoàn tất
+      });
   };
 
   return (
@@ -166,8 +172,12 @@ const RegisterForm = () => {
               },
             }}
           />
-          <Button type="submit" className={classes.action}>
-            Đăng ký
+          <Button type="submit" className={classes.action} disabled={loading}>
+            {loading ? (
+              <CircularProgress size={24} color="inherit" /> // Hiển thị CircularProgress khi loading
+            ) : (
+              "Đăng ký"
+            )}
           </Button>
           <Typography component="body2" className={classes.account}>
             Đã có tài khoản?
@@ -177,6 +187,17 @@ const RegisterForm = () => {
           </Typography>
         </form>
       </Box>
+
+      {/* Hiển thị Backdrop (overlay) khi đang tải */}
+      <Backdrop
+        open={loading}
+        style={{
+          zIndex: 1200, // Đảm bảo Backdrop hiển thị trên tất cả các phần tử khác
+          color: '#fff',
+        }}
+      >
+        <CircularProgress color="inherit" />
+      </Backdrop>
     </Box>
   );
 };
