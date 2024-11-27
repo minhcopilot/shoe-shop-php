@@ -3,38 +3,52 @@ import { createSlice } from "@reduxjs/toolkit";
 const chatSlice = createSlice({
   name: "chat",
   initialState: {
-    messages: {}, // Lưu tin nhắn theo userId
-    chats: [], // Danh sách chat
+    messages: [],
+    isOpen: false,
+    chatHistoryLoaded: false,
+    isLoading: false,
   },
   reducers: {
     setMessages: (state, action) => {
-      const { userId, messages } = action.payload;
-      state.messages[userId] = messages;
+      state.messages = action.payload;
     },
     addMessage: (state, action) => {
-      const { userId, message } = action.payload;
-      if (!state.messages[userId]) {
-        state.messages[userId] = [];
+      const messageExists = state.messages.some(
+        (msg) =>
+          msg.content === action.payload.content &&
+          msg.sender === action.payload.sender &&
+          new Date(msg.timestamp).getTime() ===
+            new Date(action.payload.timestamp).getTime()
+      );
+
+      if (!messageExists) {
+        state.messages.push(action.payload);
+        state.messages.sort(
+          (a, b) => new Date(a.timestamp) - new Date(b.timestamp)
+        );
       }
-      state.messages[userId].push(message);
     },
-    setChats: (state, action) => {
-      state.chats = action.payload;
+    removeMessage: (state, action) => {
+      state.messages = state.messages.filter((msg) => msg !== action.payload);
     },
-    updateChat: (state, action) => {
-      const { userId, lastMessage, timestamp } = action.payload;
-      const chatIndex = state.chats.findIndex((chat) => chat.id === userId);
-      if (chatIndex !== -1) {
-        state.chats[chatIndex] = {
-          ...state.chats[chatIndex],
-          lastMessage,
-          timestamp,
-        };
-      }
+    setChatOpen: (state, action) => {
+      state.isOpen = action.payload;
+    },
+    setChatHistoryLoaded: (state, action) => {
+      state.chatHistoryLoaded = action.payload;
+    },
+    setLoading: (state, action) => {
+      state.isLoading = action.payload;
     },
   },
 });
 
-export const { setMessages, addMessage, setChats, updateChat } =
-  chatSlice.actions;
+export const {
+  setMessages,
+  addMessage,
+  removeMessage,
+  setChatOpen,
+  setChatHistoryLoaded,
+  setLoading,
+} = chatSlice.actions;
 export default chatSlice.reducer;

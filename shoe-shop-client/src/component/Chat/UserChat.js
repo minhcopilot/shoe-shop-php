@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   Box,
   TextField,
@@ -10,8 +10,17 @@ import {
 import { makeStyles } from "@material-ui/core/styles";
 import { BiSend } from "react-icons/bi";
 import { IoMdChatboxes } from "react-icons/io";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { subscribeToChatChannel, disconnectPusher } from "../../hook/pusher";
+import MessageSkeleton from "./MessageSkeleton";
+import {
+  setMessages,
+  addMessage,
+  removeMessage,
+  setChatOpen,
+  setChatHistoryLoaded,
+  setLoading,
+} from "../../redux/slices/chatSlice";
 const useStyles = makeStyles((theme) => ({
   chatContainer: {
     position: "fixed",
@@ -20,6 +29,7 @@ const useStyles = makeStyles((theme) => ({
     width: 350,
     height: 450,
     zIndex: 1000,
+    borderRadius: 10,
   },
   chatHeader: {
     backgroundColor: "#1a202c",
@@ -33,6 +43,17 @@ const useStyles = makeStyles((theme) => ({
     overflowY: "auto",
     padding: 20,
     backgroundColor: "#f5f5f5",
+    scrollBehavior: "smooth",
+    "&::-webkit-scrollbar": {
+      width: "8px",
+    },
+    "&::-webkit-scrollbar-track": {
+      background: "#f1f1f1",
+    },
+    "&::-webkit-scrollbar-thumb": {
+      background: "#888",
+      borderRadius: "4px",
+    },
   },
   messageContainer: {
     marginBottom: 10,
@@ -128,35 +149,50 @@ const useStyles = makeStyles((theme) => ({
 
 const UserChat = () => {
   const classes = useStyles();
+  const dispatch = useDispatch();
   const [message, setMessage] = useState("");
-  const [messages, setMessages] = useState([]);
-  const [isOpen, setIsOpen] = useState(false);
-  const messagesEndRef = useRef(null);
+  const chatBodyRef = useRef(null);
+
+  // Lấy state từ Redux thay vì local state
+  const { messages, isOpen, chatHistoryLoaded, isLoading } = useSelector(
+    (state) => state.chat
+  );
   const user = useSelector((state) => state.auth.user);
 
   useEffect(() => {
     const subscription = subscribeToChatChannel((message) => {
-      if (message.sender_id === parseInt(process.env.REACT_APP_SHOP_ADMIN_ID)) {
-        setMessages((prev) =>
-          [
-            ...prev,
-            {
-              content: message.content,
-              sender: "admin",
-              timestamp: new Date(message.created_at),
-            },
-          ].sort((a, b) => a.timestamp - b.timestamp)
-        );
+      if (
+        message.sender_id === parseInt(process.env.REACT_APP_SHOP_ADMIN_ID) &&
+        message.receiver_id === user.id
+      ) {
+        const newMessage = {
+          content: message.content,
+          sender: "admin",
+          timestamp: new Date(message.created_at),
+        };
+
+        dispatch(addMessage(newMessage));
       }
     });
 
     return () => {
-      disconnectPusher();
+      if (subscription) {
+        subscription();
+      }
     };
-  }, [user?.id]);
+  }, [dispatch, user.id]);
+
+  useEffect(() => {
+    if (chatBodyRef.current && messages.length > 0) {
+      chatBodyRef.current.scrollTop = chatBodyRef.current.scrollHeight;
+    }
+  }, [messages]);
 
   useEffect(() => {
     const fetchChatHistory = async () => {
+      if (chatHistoryLoaded) return;
+
+      dispatch(setLoading(true));
       try {
         const response = await fetch(
           `${process.env.REACT_APP_API_URL}/messages/${process.env.REACT_APP_SHOP_ADMIN_ID}`,
@@ -168,7 +204,6 @@ const UserChat = () => {
         );
         const chatHistory = await response.json();
 
-        // Format và sắp xếp tin nhắn theo thời gian
         const formattedMessages = chatHistory
           .map((msg) => ({
             content: msg.content,
@@ -177,20 +212,27 @@ const UserChat = () => {
           }))
           .sort((a, b) => a.timestamp - b.timestamp);
 
-        setMessages(formattedMessages);
+        if (formattedMessages.length === 0) {
+          formattedMessages.push({
+            content: "Xin chào bạn! Bạn cần giúp gì?",
+            sender: "admin",
+            timestamp: new Date(),
+          });
+        }
+
+        dispatch(setMessages(formattedMessages));
+        dispatch(setChatHistoryLoaded(true));
       } catch (error) {
         console.error("Error fetching chat history:", error);
+      } finally {
+        dispatch(setLoading(false));
       }
     };
 
-    if (isOpen && user) {
+    if (isOpen && user && !chatHistoryLoaded) {
       fetchChatHistory();
     }
-  }, [isOpen, user]);
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [isOpen, user, chatHistoryLoaded, dispatch]);
 
   const handleSendMessage = async () => {
     if (message.trim()) {
@@ -200,10 +242,8 @@ const UserChat = () => {
         timestamp: new Date(),
       };
 
-      setMessages((prev) =>
-        [...prev, tempMessage].sort((a, b) => a.timestamp - b.timestamp)
-      );
-      setMessage(""); // Clear input ngay lập tức
+      dispatch(addMessage(tempMessage));
+      setMessage(""); // Clear input
 
       try {
         const response = await fetch(
@@ -222,12 +262,11 @@ const UserChat = () => {
         );
 
         if (!response.ok) {
-          // Rollback nếu gửi thất bại
-          setMessages((prev) => prev.filter((msg) => msg !== tempMessage));
+          dispatch(removeMessage(tempMessage));
         }
       } catch (error) {
         console.error("Error sending message:", error);
-        setMessages((prev) => prev.filter((msg) => msg !== tempMessage));
+        dispatch(removeMessage(tempMessage));
       }
     }
   };
@@ -243,7 +282,7 @@ const UserChat = () => {
       {!isOpen ? (
         <IconButton
           className={classes.chatButton}
-          onClick={() => setIsOpen(true)}
+          onClick={() => dispatch(setChatOpen(true))}
         >
           <IoMdChatboxes className={classes.chatIcon} />
         </IconButton>
@@ -258,7 +297,7 @@ const UserChat = () => {
               <Typography variant="h6">Chat với shop</Typography>
               <IconButton
                 size="small"
-                onClick={() => setIsOpen(false)}
+                onClick={() => dispatch(setChatOpen(false))}
                 style={{ color: "white" }}
               >
                 <Typography>✕</Typography>
@@ -266,29 +305,36 @@ const UserChat = () => {
             </Box>
           </Box>
 
-          <Box className={classes.chatBody}>
-            {messages.map((msg, index) => (
-              <Box
-                key={index}
-                className={classes.messageContainer}
-                style={{
-                  display: "flex",
-                  justifyContent:
-                    msg.sender === "user" ? "flex-end" : "flex-start",
-                }}
-              >
+          <Box className={classes.chatBody} ref={chatBodyRef}>
+            {isLoading ? (
+              <>
+                <MessageSkeleton align="left" />
+                <MessageSkeleton align="right" />
+                <MessageSkeleton align="left" />
+              </>
+            ) : (
+              messages.map((msg, index) => (
                 <Box
-                  className={`${classes.message} ${
-                    msg.sender === "user"
-                      ? classes.userMessage
-                      : classes.adminMessage
-                  }`}
+                  key={index}
+                  className={classes.messageContainer}
+                  style={{
+                    display: "flex",
+                    justifyContent:
+                      msg.sender === "user" ? "flex-end" : "flex-start",
+                  }}
                 >
-                  <Typography>{msg.content}</Typography>
+                  <Box
+                    className={`${classes.message} ${
+                      msg.sender === "user"
+                        ? classes.userMessage
+                        : classes.adminMessage
+                    }`}
+                  >
+                    <Typography>{msg.content}</Typography>
+                  </Box>
                 </Box>
-              </Box>
-            ))}
-            <div ref={messagesEndRef} />
+              ))
+            )}
           </Box>
 
           <Box className={classes.inputContainer}>

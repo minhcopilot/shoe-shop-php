@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   Box,
   Typography,
@@ -17,6 +17,8 @@ import SearchIcon from "@material-ui/icons/Search";
 import SendIcon from "@material-ui/icons/Send";
 import { useSelector } from "react-redux";
 import { subscribeToChatChannel, disconnectPusher } from "../../../hook/pusher";
+import MessageSkeleton from "../../../component/Chat/MessageSkeleton";
+import ChatListSkeleton from "../../../component/Chat/ChatListSkeleton";
 
 const useStyles = makeStyles((theme) => ({
   container: {
@@ -127,6 +129,17 @@ const useStyles = makeStyles((theme) => ({
     display: "flex",
     flexDirection: "column",
     overflowX: "hidden",
+    scrollBehavior: "smooth",
+    "&::-webkit-scrollbar": {
+      width: "8px",
+    },
+    "&::-webkit-scrollbar-track": {
+      background: "#f1f1f1",
+    },
+    "&::-webkit-scrollbar-thumb": {
+      background: "#888",
+      borderRadius: "4px",
+    },
   },
   messageWrapper: {
     display: "flex",
@@ -207,37 +220,82 @@ const AdminChatList = () => {
   const [newMessage, setNewMessage] = useState("");
   const [messages, setMessages] = useState({});
   const [onlineUsers, setOnlineUsers] = useState(new Set());
+  const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingChats, setIsLoadingChats] = useState(true);
+  const messageContainerRef = useRef(null);
+  const [loadedChats, setLoadedChats] = useState(new Set());
 
   useEffect(() => {
     const subscription = subscribeToChatChannel((message) => {
-      if (message.sender_id !== admin.id) {
-        setMessages((prev) => {
-          const chatId = message.sender_id;
-          const currentMessages = prev[chatId] || [];
-          return {
-            ...prev,
-            [chatId]: [
-              ...currentMessages,
-              {
-                id: message.id,
-                text: message.content,
-                sender: "user",
-                timestamp: new Date(message.created_at),
-              },
-            ].sort((a, b) => a.timestamp - b.timestamp),
-          };
-        });
-      }
+      // Cập nhật messages
+      setMessages((prev) => {
+        const chatId =
+          message.sender_id === admin.id
+            ? message.receiver_id
+            : message.sender_id;
+
+        // Kiểm tra xem tin nhắn đã tồn tại chưa
+        const messageExists = prev[chatId]?.some(
+          (msg) =>
+            msg.id === message.id ||
+            (msg.text === message.content &&
+              Math.abs(new Date(msg.timestamp) - new Date(message.created_at)) <
+                1000)
+        );
+
+        // Nếu tin nhắn đã tồn tại, không thêm vào nữa
+        if (messageExists) {
+          return prev;
+        }
+
+        return {
+          ...prev,
+          [chatId]: [
+            ...(prev[chatId] || []),
+            {
+              id: message.id,
+              text: message.content,
+              sender: message.sender_id === admin.id ? "admin" : "user",
+              timestamp: new Date(message.created_at),
+            },
+          ].sort((a, b) => a.timestamp - b.timestamp),
+        };
+      });
+
+      // Cập nhật danh sách chat
+      setChats((prev) => {
+        const chatIndex = prev.findIndex(
+          (chat) =>
+            chat.id ===
+            (message.sender_id === admin.id
+              ? message.receiver_id
+              : message.sender_id)
+        );
+
+        if (chatIndex === -1) return prev;
+
+        const updatedChats = [...prev];
+        updatedChats[chatIndex] = {
+          ...updatedChats[chatIndex],
+          lastMessage: message.content,
+          timestamp: new Date().toLocaleTimeString(),
+        };
+
+        return updatedChats;
+      });
     });
 
     return () => {
-      disconnectPusher();
+      if (subscription) {
+        subscription();
+      }
     };
   }, [admin.id]);
 
   // Lấy danh sách chat khi component mount
   useEffect(() => {
     const fetchChats = async () => {
+      setIsLoadingChats(true);
       try {
         const response = await fetch(`${process.env.REACT_APP_API_URL}/chats`, {
           headers: {
@@ -258,6 +316,8 @@ const AdminChatList = () => {
         setChats(formattedChats);
       } catch (error) {
         console.error("Error fetching chats:", error);
+      } finally {
+        setIsLoadingChats(false);
       }
     };
 
@@ -268,44 +328,51 @@ const AdminChatList = () => {
   const handleChatClick = async (chat) => {
     setSelectedChat(chat);
 
-    try {
-      const response = await fetch(
-        `${process.env.REACT_APP_API_URL}/messages/${chat.id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
-      const chatHistory = await response.json();
-
-      // Sắp xếp tin nhắn theo thời gian
-      const sortedMessages = chatHistory
-        .map((msg) => ({
-          id: msg.id,
-          text: msg.content,
-          sender: msg.sender_id === admin.id ? "admin" : "user",
-          timestamp: new Date(msg.created_at),
-        }))
-        .sort((a, b) => a.timestamp - b.timestamp);
-
-      setMessages((prev) => ({
-        ...prev,
-        [chat.id]: sortedMessages,
-      }));
-
-      // Đánh dấu tin nhắn đã đọc
-      setChats((prev) =>
-        prev.map((c) => {
-          if (c.id === chat.id) {
-            return { ...c, unread: false };
+    // Kiểm tra xem chat này đã được load chưa
+    if (!loadedChats.has(chat.id)) {
+      setIsLoading(true);
+      try {
+        const response = await fetch(
+          `${process.env.REACT_APP_API_URL}/messages/${chat.id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
           }
-          return c;
-        })
-      );
-    } catch (error) {
-      console.error("Error loading chat history:", error);
+        );
+        const chatHistory = await response.json();
+
+        const sortedMessages = chatHistory
+          .map((msg) => ({
+            id: msg.id,
+            text: msg.content,
+            sender: msg.sender_id === admin.id ? "admin" : "user",
+            timestamp: new Date(msg.created_at),
+          }))
+          .sort((a, b) => a.timestamp - b.timestamp);
+
+        setMessages((prev) => ({
+          ...prev,
+          [chat.id]: sortedMessages,
+        }));
+
+        // Đánh dấu chat này đã được load
+        setLoadedChats((prev) => new Set([...prev, chat.id]));
+      } catch (error) {
+        console.error("Error loading chat history:", error);
+      } finally {
+        setIsLoading(false);
+      }
     }
+
+    setChats((prev) =>
+      prev.map((c) => {
+        if (c.id === chat.id) {
+          return { ...c, unread: false };
+        }
+        return c;
+      })
+    );
   };
 
   const handleSendMessage = async () => {
@@ -370,6 +437,28 @@ const AdminChatList = () => {
     chat.userName.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // Thêm hàm scroll
+  const scrollToBottom = useCallback(() => {
+    if (messageContainerRef.current) {
+      messageContainerRef.current.scrollTop =
+        messageContainerRef.current.scrollHeight;
+    }
+  }, []);
+
+  // Thêm useEffect để scroll khi có tin nhắn mới
+  useEffect(() => {
+    if (selectedChat && messages[selectedChat.id]) {
+      scrollToBottom();
+    }
+  }, [messages, selectedChat, scrollToBottom]);
+
+  // Thêm useEffect để scroll khi chọn chat
+  useEffect(() => {
+    if (selectedChat) {
+      scrollToBottom();
+    }
+  }, [selectedChat, scrollToBottom]);
+
   return (
     <>
       <Helmet>
@@ -393,52 +482,57 @@ const AdminChatList = () => {
             </Box>
 
             <List className={classes.chatList}>
-              {filteredChats.map((chat) => (
-                <Paper
-                  key={chat.id}
-                  className={classes.chatItem}
-                  onClick={() => handleChatClick(chat)}
-                >
-                  <ListItem disableGutters>
-                    <Box className={classes.userInfo}>
-                      <Avatar className={classes.avatar}>
-                        {chat.userName.charAt(0)}
-                        {onlineUsers.has(chat.id) && (
-                          <Box
-                            className={classes.onlineIndicator}
-                            style={{
-                              width: 10,
-                              height: 10,
-                              backgroundColor: "#44b700",
-                              borderRadius: "50%",
-                              position: "absolute",
-                              bottom: 0,
-                              right: 0,
-                              border: "2px solid white",
-                            }}
-                          />
-                        )}
-                      </Avatar>
-                      <Box className={classes.messageInfo}>
-                        <Typography className={classes.userName}>
-                          {chat.userName}
-                        </Typography>
-                        <Typography className={classes.lastMessage}>
-                          {chat.lastMessage}
-                        </Typography>
-                      </Box>
-                      <Box display="flex" alignItems="center">
-                        <Typography className={classes.timestamp}>
-                          {chat.timestamp}
-                        </Typography>
-                        {chat.unread && (
-                          <Box className={classes.unreadIndicator} />
-                        )}
-                      </Box>
-                    </Box>
-                  </ListItem>
-                </Paper>
-              ))}
+              {isLoadingChats
+                ? // Hiển thị 5 skeleton items khi đang loading
+                  [...Array(5)].map((_, index) => (
+                    <ChatListSkeleton key={index} />
+                  ))
+                : filteredChats.map((chat) => (
+                    <Paper
+                      key={chat.id}
+                      className={classes.chatItem}
+                      onClick={() => handleChatClick(chat)}
+                    >
+                      <ListItem disableGutters>
+                        <Box className={classes.userInfo}>
+                          <Avatar className={classes.avatar}>
+                            {chat.userName.charAt(0)}
+                            {onlineUsers.has(chat.id) && (
+                              <Box
+                                className={classes.onlineIndicator}
+                                style={{
+                                  width: 10,
+                                  height: 10,
+                                  backgroundColor: "#44b700",
+                                  borderRadius: "50%",
+                                  position: "absolute",
+                                  bottom: 0,
+                                  right: 0,
+                                  border: "2px solid white",
+                                }}
+                              />
+                            )}
+                          </Avatar>
+                          <Box className={classes.messageInfo}>
+                            <Typography className={classes.userName}>
+                              {chat.userName}
+                            </Typography>
+                            <Typography className={classes.lastMessage}>
+                              {chat.lastMessage}
+                            </Typography>
+                          </Box>
+                          <Box display="flex" alignItems="center">
+                            <Typography className={classes.timestamp}>
+                              {chat.timestamp}
+                            </Typography>
+                            {chat.unread && (
+                              <Box className={classes.unreadIndicator} />
+                            )}
+                          </Box>
+                        </Box>
+                      </ListItem>
+                    </Paper>
+                  ))}
             </List>
           </Box>
 
@@ -453,27 +547,38 @@ const AdminChatList = () => {
                 </Box>
               </Box>
 
-              <Box className={classes.messageContainer}>
-                {messages[selectedChat.id]?.map((message) => (
-                  <Box
-                    key={message.id}
-                    className={`${classes.messageWrapper} ${
-                      message.sender === "admin"
-                        ? classes.sentMessageWrapper
-                        : classes.receivedMessageWrapper
-                    }`}
-                  >
-                    <Typography
-                      className={`${classes.message} ${
+              <Box
+                className={classes.messageContainer}
+                ref={messageContainerRef}
+              >
+                {isLoading ? (
+                  <>
+                    <MessageSkeleton align="left" />
+                    <MessageSkeleton align="right" />
+                    <MessageSkeleton align="left" />
+                  </>
+                ) : (
+                  messages[selectedChat.id]?.map((message) => (
+                    <Box
+                      key={message.id}
+                      className={`${classes.messageWrapper} ${
                         message.sender === "admin"
-                          ? classes.sentMessage
-                          : classes.receivedMessage
+                          ? classes.sentMessageWrapper
+                          : classes.receivedMessageWrapper
                       }`}
                     >
-                      {message.text}
-                    </Typography>
-                  </Box>
-                ))}
+                      <Typography
+                        className={`${classes.message} ${
+                          message.sender === "admin"
+                            ? classes.sentMessage
+                            : classes.receivedMessage
+                        }`}
+                      >
+                        {message.text}
+                      </Typography>
+                    </Box>
+                  ))
+                )}
               </Box>
 
               <Box className={classes.inputContainer}>
