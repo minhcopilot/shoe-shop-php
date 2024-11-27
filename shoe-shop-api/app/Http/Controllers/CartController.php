@@ -37,7 +37,7 @@ class CartController extends Controller
             'error' => false,
         ], 200);
     }
-
+    
     // Thêm sản phẩm vào giỏ hàng
     public function addToCart(Request $request)
     {
@@ -167,19 +167,21 @@ class CartController extends Controller
     private function updateUserCart(User $user)
     {
         $cartItems = Cart::where('user_id', $user->id)
-            ->with(['product:id,name', 'size:id,name'])
+            ->with(['product:id,name,price,images', 'size:id,name'])  // Nạp thêm các trường price và images
             ->get(['product_id', 'size_id', 'quantity']);
-
+    
         $userCart = $cartItems->map(function ($item) {
             return [
                 'product_id' => $item->product_id,
                 'size_id' => $item->size_id,
+                'product_price' => $item->product->price ?? null,  // Lấy giá của sản phẩm
                 'quantity' => $item->quantity,
                 'product_name' => $item->product->name ?? null,
                 'size_name' => $item->size->name ?? null,
+                'product_img' => $item->product->images ? $item->product->images[0] : null,  // Lấy ảnh sản phẩm, nếu có
             ];
         })->toArray();
-
+    
         $user->update(['cart' => $userCart]);
     }
-}
+    }
