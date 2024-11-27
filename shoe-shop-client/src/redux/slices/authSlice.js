@@ -3,7 +3,7 @@ import authAPI from "../../api/authApi";
 import paymentAPI from "../../api/paymentApi";
 import userAPI from "../../api/userApi";
 import { getAllUser, getUser } from "../slices/userSlice";
-
+import axiosClient from "../../api/axiosClient";
 export const login = createAsyncThunk(
   "auth/login",
   async (data, { rejectWithValue }) => {
@@ -17,15 +17,15 @@ export const login = createAsyncThunk(
 
 export const signUp = createAsyncThunk(
   "auth/signUp",
-  async (data, { rejectWithValue, dispatch }) => {
+  async (data, { rejectWithValue }) => {
     try {
-      const result = await authAPI.register(data);
-
-      dispatch(getAllUser());
-
-      return result;
+      const response = await axiosClient.post("/register", data);
+      return response; // API trả về message, user, và token
     } catch (error) {
-      return rejectWithValue(error.response);
+      if (error.response && error.response.data) {
+        return rejectWithValue(error.response.data); // Trả về lỗi từ API
+      }
+      return rejectWithValue(error.message);
     }
   }
 );
