@@ -13,3 +13,8 @@ npm-debug.log
 yarn-error.log
 /.idea
 /.vscode
+# Terminal 1: Chạy Laravel WebSocket Server
+php artisan websockets:serve
+
+# Terminal 2: Chạy Laravel Server
+php artisan serve

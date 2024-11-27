@@ -4,13 +4,13 @@ import { CSSTransition, TransitionGroup } from "react-transition-group";
 import "../App.css";
 import PrivateRoute from "../component/PrivateRoute/PrivateRoute";
 import PublicRoute from "../component/PublicRoute/PublicRoute";
-
 // Admin pages
 const HomeAdmin = lazy(() => import("../pages/admin/Home/Home"));
 const UserAdmin = lazy(() => import("../pages/admin/User/User"));
 const CategoryAdmin = lazy(() => import("../pages/admin/Category/Category"));
 const SizeAdmin = lazy(() => import("../pages/admin/Size/Size"));
 const ProductAdmin = lazy(() => import("../pages/admin/Product/Product"));
+const AdminChat = lazy(() => import("../pages/admin/Chat/AdminChatList"));
 const AddEditProductAdmin = lazy(() =>
   import("../pages/admin/Product/AddEditProduct/AddEditProduct")
 );
@@ -53,6 +53,11 @@ const routesApp = [
     exact: true,
     path: "/admin/size",
     component: SizeAdmin,
+  },
+  {
+    exact: true,
+    path: "/admin/chat",
+    component: AdminChat,
   },
   {
     exact: true,

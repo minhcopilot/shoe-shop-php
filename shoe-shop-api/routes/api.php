@@ -15,7 +15,7 @@ use Illuminate\Auth\Events\Verified;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\CartController;
-
+use App\Http\Controllers\ChatController;
 Route::get('/cart', [CartController::class, 'getCart']);
 Route::post('/cart', [CartController::class, 'addToCart']);
 Route::put('/cart', [CartController::class, 'updateCart']);
@@ -99,3 +99,8 @@ Route::get('/reset-password/{token}', function ($token) {
 })->name('password.reset');
 
 
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/messages', [ChatController::class, 'sendMessage']);
+    Route::get('/messages/{user_id}', [ChatController::class, 'getMessages']);
+    Route::get('/chats', [ChatController::class, 'getChats']);
+});
