@@ -23,7 +23,8 @@ import { useStyles } from "./styles";
 
 const Order = () => {
   const classes = useStyles();
-  const orders = useSelector((state) => state.order.orders);
+  const a = useSelector((state) => state.order.orders);
+  const [orders, setOders] = useState(a);
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -69,6 +70,14 @@ const Order = () => {
       setFilteredOrders(filtered);
     }, 400);
   };
+  const handleUpdate = (data) => {
+    const updatedOrders = orders.map((order) =>
+      order._id === data.newOrder._id ? data.newOrder : order
+    );
+    console.log(orders, data.newOrder, updatedOrders);
+
+    setFilteredOrders(updatedOrders);
+  };
 
   const handleDeleteOrder = (id) => {
     console.log(id);
@@ -92,7 +101,7 @@ const Order = () => {
             <IconButton className={classes.searchBtn}>
               <BiSearchAlt2 />
             </IconButton>
-            <Button className={classes.add}>Thêm đơn hàng</Button>
+            {/* <Button className={classes.add}>Thêm đơn hàng</Button> */}
           </Box>
           <TableContainer
             component={Paper}
@@ -159,6 +168,7 @@ const Order = () => {
                   open={open2}
                   handleClose={handleClose2}
                   order={updateOrder}
+                  updateSuccess={handleUpdate}
                 />
               </TableBody>
             </Table>

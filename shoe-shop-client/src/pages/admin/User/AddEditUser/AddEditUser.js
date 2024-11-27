@@ -179,6 +179,7 @@ const AddEditUser = ({ open, handleClose, user, handleData }) => {
                 Quyền
               </FormLabel>
               <Controller
+                name="role"
                 rules={{ required: true }}
                 control={control}
                 // defaultValue="business"

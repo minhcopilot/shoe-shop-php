@@ -18,6 +18,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { BiPencil, BiSearchAlt2, BiX } from "react-icons/bi";
 import { useDispatch, useSelector } from "react-redux";
+import "react-toastify/dist/ReactToastify.css";
 import { toast, ToastContainer } from "react-toastify";
 import AdminLayout from "../../../component/admin/AdminLayout/AdminLayout";
 import { deleteUser, getAllUser } from "../../../redux/slices/userSlice";
