@@ -21,14 +21,18 @@ import { useDispatch } from "react-redux";
 import { unwrapResult } from "@reduxjs/toolkit";
 import { signUp } from "../../redux/slices/authSlice";
 
+// Định nghĩa schema validation với Yup
 const schema = yup.object().shape({
-  fullName: yup.string().required(),
-  email: yup.string().required().email(),
-  password: yup.string().required().min(8, "Password is 8 characters long"),
+  fullName: yup.string().required("Họ tên là bắt buộc"),
+  email: yup.string().email("Email không hợp lệ").required("Email là bắt buộc"),
+  password: yup
+    .string()
+    .min(8, "Mật khẩu phải ít nhất 8 ký tự")
+    .required("Mật khẩu là bắt buộc"),
   confirmPassword: yup
     .string()
-    .required("Confirm password is a required field")
-    .oneOf([yup.ref("password"), null], "Confirm password is not correct"),
+    .oneOf([yup.ref("password"), null], "Mật khẩu nhập lại không khớp")
+    .required("Nhập lại mật khẩu là bắt buộc"),
 });
 
 const RegisterForm = () => {
@@ -45,15 +49,29 @@ const RegisterForm = () => {
   const [error, setError] = useState();
 
   const handleRegister = (data) => {
-    const action = signUp(data);
+    const action = signUp({
+      name: data.fullName,
+      email: data.email,
+      password: data.password,
+      password_confirmation: data.confirmPassword,
+      is_admin: "0", // Nếu cần thiết
+    });
     dispatch(action)
-      .then(unwrapResult)
-      .then(() => {
-        history.push("/login");
-      })
-      .catch((error) => {
-        if (error.status === 400) setError("Email has already been taken");
-      });
+    .then(unwrapResult)
+    .then((res) => {
+      // Thành công -> chuyển hướng đến trang xác minh email
+      alert(res.message || "Đăng ký thành công! Vui lòng kiểm tra email của bạn.");
+      localStorage.setItem("authToken", res.token); // Lưu token sau khi đăng ký thành công
+      history.push("/verify-email");
+    })
+    .catch((error) => {
+      // Hiển thị lỗi khi đăng ký thất bại
+      if (error.errors?.email) {
+        setError(error.errors.email[0]); // Lỗi email đã tồn tại
+      } else {
+        setError(error.message || "Đăng ký thất bại!");
+      }
+    });
   };
 
   return (
@@ -69,6 +87,12 @@ const RegisterForm = () => {
         </Hidden>
         <form className={classes.form} onSubmit={handleSubmit(handleRegister)}>
           <img src={bgRes3} alt="avatar" className={classes.avatar} />
+          {/* Hiển thị lỗi */}
+          {error && (
+            <Typography component="p" className={classes.error}>
+              {error}
+            </Typography>
+          )}
           {errors.confirmPassword && (
             <Typography component="p" className={classes.error}>
               {errors.confirmPassword.message}
@@ -77,11 +101,6 @@ const RegisterForm = () => {
           {errors.password && (
             <Typography component="p" className={classes.error}>
               {errors.password.message}
-            </Typography>
-          )}
-          {error && (
-            <Typography component="p" className={classes.error}>
-              {error}
             </Typography>
           )}
           <TextField

@@ -32,6 +32,9 @@ const ProductDetail = lazy(() =>
 );
 const Shop = lazy(() => import("../component/customer/Shop/Shop"));
 const NotFound = lazy(() => import("../pages/customer/NotFound/NotFound"));
+//Verify Email
+const VerifyEmail = lazy(() => import("../pages/VerifyEmail/VerifyEmail"));
+const VerifySuccessful = lazy(() => import("../pages/VerifyEmail/VerifySuccessful"));
 
 const routesApp = [
   {
@@ -99,6 +102,17 @@ const routesApp = [
   // },
   {
     exact: true,
+    path: "/verify-email",
+    component: VerifyEmail,
+    restricted: true,
+  },  
+  {
+    exact: true,
+    path: "/verify-successful",
+    component: VerifySuccessful,
+  },
+  {
+    exact: true,
     path: "/cart",
     component: Cart,
   },
@@ -120,6 +134,7 @@ const routesApp = [
     path: "*",
     component: NotFound,
   },
+  
 ];
 
 const RoutesApp = () => {
