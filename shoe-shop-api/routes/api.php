@@ -112,9 +112,9 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
 });
 
 Route::get('/reset-password/{token}', function ($token) {
-    return response()->json(['token' => $token]);
+    $frontendUrl = "http://localhost:3000/reset-password?token={$token}";
+    return redirect($frontendUrl);
 })->name('password.reset');
-
 Route::middleware(['auth:sanctum'])->group(function () {
     // Lấy danh sách tất cả người dùng (có thể truy cập bởi tất cả người dùng đã đăng nhập)
     Route::get('/users', [UserController::class, 'index']);
