@@ -17,13 +17,13 @@ class OrderController extends Controller
         $this->middleware('auth:sanctum');
     }
 
-    // Tạo đơn hàng từ giỏ hàng
     public function createOrder(Request $request)
     {
         // Validate dữ liệu đầu vào
         $request->validate([
             'payment_method' => 'required|string',
             'address' => 'required|string',
+            'status' => 'nullable|string|in:Chờ xác nhận,Đã xác nhận,Đang giao hàng,Huỷ',
         ]);
 
         $user = Auth::user();
@@ -46,12 +46,15 @@ class OrderController extends Controller
             $totalPrice += $product->price * $item->quantity;
         }
 
+        // Xử lý trạng thái đơn hàng (mặc định là 'Chờ xác nhận')
+        $status = $request->status ?? 'Chờ xác nhận';
+
         // Tạo đơn hàng mới
         $order = Order::create([
             'user_id' => $user->id,
             'total_price' => $totalPrice,
             'payment_method' => $request->payment_method,
-            'status' => 'Pending',  // Trạng thái mặc định là "Pending"
+            'status' => $status,  // Trạng thái được truyền vào request, mặc định là 'Chờ xác nhận'
             'address' => $request->address,
         ]);
 
@@ -79,6 +82,7 @@ class OrderController extends Controller
         ], 201);
     }
 
+
     // Cập nhật đơn hàng
     public function updateOrderStatus(Request $request, $orderId)
     {
@@ -104,11 +108,33 @@ class OrderController extends Controller
     {
         $user = Auth::user();
         $orders = Order::where('user_id', $user->id)
-                        ->with('orderItems.product', 'orderItems.size') // Load thông tin sản phẩm và size
-                        ->get();
+            ->with('orderItems.product', 'orderItems.size') // Load thông tin sản phẩm và size
+            ->get();
 
         return response()->json([
             'orders' => $orders,
+            'error' => false,
+        ]);
+    }
+
+    public function getOrderDetail($orderId)
+    {
+        $user = Auth::user();
+
+        // Tìm đơn hàng theo ID và thuộc về người dùng hiện tại
+        $order = Order::where('user_id', $user->id)
+            ->with('orderItems.product', 'orderItems.size') // Tải thông tin sản phẩm và kích thước
+            ->findOrFail($orderId); // Nếu không tìm thấy đơn hàng thì trả về lỗi 404
+
+        // Chuyển đổi các orderItems để hiển thị thông tin chi tiết về sản phẩm và kích thước
+        $order->orderItems->transform(function ($item) {
+            $item->product_name = $item->product->name;  // Thêm tên sản phẩm vào OrderItem
+            $item->size_name = $item->size->name;        // Thêm tên kích thước vào OrderItem
+            return $item;
+        });
+
+        return response()->json([
+            'order' => $order,
             'error' => false,
         ]);
     }
@@ -118,7 +144,7 @@ class OrderController extends Controller
     {
         $user = Auth::user();
         $order = Order::where('user_id', $user->id)->findOrFail($orderId);
-        
+
         // Xóa đơn hàng và các mục liên quan
         $order->delete();
 
@@ -137,9 +163,9 @@ class OrderController extends Controller
 
         $user = Auth::user();
         $orders = Order::where('user_id', $user->id)
-                        ->where('status', $request->status)
-                        ->with('orderItems.product', 'orderItems.size')
-                        ->get();
+            ->where('status', $request->status)
+            ->with('orderItems.product', 'orderItems.size')
+            ->get();
 
         return response()->json([
             'orders' => $orders,
@@ -147,4 +173,3 @@ class OrderController extends Controller
         ]);
     }
 }
-

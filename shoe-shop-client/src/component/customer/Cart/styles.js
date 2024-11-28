@@ -74,7 +74,7 @@ const useStyles = makeStyles((theme) => ({
 	cellProduct: {
 		display: 'flex',
 		alignItems: 'center',
-		justifyContent: 'center',
+		// justifyContent: 'center',
 	},
 	imgProduct: {
 		width: 100,

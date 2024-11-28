@@ -76,17 +76,16 @@ class CartController extends Controller
     }
 
     // Cập nhật sản phẩm trong giỏ hàng
-    public function updateCart(Request $request)
+    public function updateCart(Request $request, $cart_id)
     {
         $request->validate([
-            'cart_id' => 'required|exists:carts,id',
             'quantity' => 'required|integer|min:1',
             'size_id' => 'nullable|exists:sizes,id',
         ]);
 
         $user = Auth::user();
 
-        $cart = Cart::where('id', $request->cart_id)
+        $cart = Cart::where('id', $cart_id)
             ->where('user_id', $user->id)
             ->first();
 
@@ -133,15 +132,11 @@ class CartController extends Controller
     }
 
     // Xóa sản phẩm khỏi giỏ hàng
-    public function removeFromCart(Request $request)
+    public function removeFromCart(Request $request, $cart_id)
     {
-        $request->validate([
-            'cart_id' => 'required|exists:carts,id',
-        ]);
-
         $user = Auth::user();
 
-        $cartItem = Cart::where('id', $request->cart_id)
+        $cartItem = Cart::where('id', $cart_id)
             ->where('user_id', $user->id)
             ->first();
 
@@ -166,12 +161,15 @@ class CartController extends Controller
     // Hàm cập nhật JSON giỏ hàng trong cột 'cart' của user
     private function updateUserCart(User $user)
     {
+        // Lấy các sản phẩm trong giỏ hàng của người dùng
         $cartItems = Cart::where('user_id', $user->id)
             ->with(['product:id,name,price,images', 'size:id,name'])  // Nạp thêm các trường price và images
-            ->get(['product_id', 'size_id', 'quantity']);
-    
+            ->get(['id', 'product_id', 'size_id', 'quantity']);  // Thêm 'id' để lấy cart_id
+        
+        // Chuyển đổi dữ liệu để trả về dưới dạng mảng, bao gồm 'cart_id'
         $userCart = $cartItems->map(function ($item) {
             return [
+                'cart_id' => $item->id,  // Trả về cart_id
                 'product_id' => $item->product_id,
                 'size_id' => $item->size_id,
                 'product_price' => $item->product->price ?? null,  // Lấy giá của sản phẩm
@@ -182,6 +180,8 @@ class CartController extends Controller
             ];
         })->toArray();
     
+        // Cập nhật giỏ hàng trong thông tin người dùng
         $user->update(['cart' => $userCart]);
     }
-    }
+    
+}
