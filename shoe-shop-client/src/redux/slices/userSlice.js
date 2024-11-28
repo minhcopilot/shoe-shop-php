@@ -3,14 +3,14 @@ import userAPI from '../../api/userApi'
 
 export const getAllUser = createAsyncThunk(
 	'user/getAllUser',
-	async (_, { rejectWithValue }) => {
-		try {
-			return await userAPI.getAllUser()
-		} catch (error) {
-			return rejectWithValue(error.response)
-		}
+	async (params = {}, { rejectWithValue }) => {
+	  try {
+		return await userAPI.getAllUser(params); // Truyền params (nếu có)
+	  } catch (error) {
+		return rejectWithValue(error.response);
+	  }
 	}
-)
+);
 
 export const getUser = createAsyncThunk(
 	'user/getUser',
@@ -87,7 +87,7 @@ const userSlice = createSlice({
 		},
 		[getAllUser.fulfilled]: (state, action) => {
 			state.usersLoading = false
-			state.users = action.payload.users
+			state.users = action.payload
 		},
 		// [getUser.pending]: (state) => {
 		// 	state.usersLoading = true

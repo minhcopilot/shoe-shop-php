@@ -8,10 +8,22 @@ use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
-    // Lấy danh sách người dùng
-    public function index()
+    public function index(Request $request)
     {
-        $users = User::all();
+        $query = User::query();
+    
+        // Kiểm tra nếu có tham số 'search'
+        if ($request->has('search')) {
+            $search = $request->get('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', '%' . $search . '%')
+                  ->orWhere('email', 'like', '%' . $search . '%');
+            });
+        }
+    
+        // Thực thi query và trả kết quả
+        $users = $query->get();
+    
         return response()->json($users);
     }
 
@@ -38,10 +50,12 @@ class UserController extends Controller
             'password' => 'required|string|min:8',
         ]);
 
+        // Tạo người dùng mới với is_admin
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'is_admin' => $request->has('is_admin') ? $request->is_admin : false, // Thêm is_admin
         ]);
 
         return response()->json([
@@ -49,6 +63,7 @@ class UserController extends Controller
             'user' => $user
         ], 201);
     }
+
 
     public function update(Request $request, $id)
     {

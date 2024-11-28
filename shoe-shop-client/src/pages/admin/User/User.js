@@ -64,19 +64,19 @@ const User = () => {
     const value = e.target.value;
 
     if (searchRef.current) {
-      clearTimeout(searchRef.current);
+        clearTimeout(searchRef.current);
     }
 
     searchRef.current = setTimeout(() => {
-      if (value === "") setFilteredUsers(users);
+        const searchParam = value.trim();
 
-      const filtered = users.filter((user) => {
-        return user.fullName.toLowerCase().includes(value.toLowerCase());
-      });
-      console.log(filtered);
-      setFilteredUsers(filtered);
-    }, 400);
-  };
+        // Gọi API với query string đúng định dạng
+        const params = searchParam ? `?search=${encodeURIComponent(searchParam)}` : '';
+        dispatch(getAllUser(params)); // Gọi API với chuỗi tìm kiếm
+    }, 400); // Đặt timeout delay tìm kiếm
+};
+
+  
 
   // Pagination
   const [page, setPage] = useState(0);
@@ -192,6 +192,9 @@ const User = () => {
                         Ngày cập nhật
                       </TableCell>
                       <TableCell align="center" className={classes.tableHead}>
+                        Vai trò
+                      </TableCell>
+                      <TableCell align="center" className={classes.tableHead}>
                         Hành động
                       </TableCell>
                     </TableRow>
@@ -206,15 +209,16 @@ const User = () => {
                             className={classes.cellProduct}
                             align="center"
                           >
-                            {user.fullName}
+                            {user.name}
                           </TableCell>
                           <TableCell align="center">{user.email}</TableCell>
                           <TableCell align="center">
-                            {new Date(user.createdAt).toLocaleString()}
+                            {new Date(user.created_at).toLocaleString()}
                           </TableCell>
                           <TableCell align="center">
-                            {new Date(user.updatedAt).toLocaleString()}
+                            {new Date(user.updated_at).toLocaleString()}
                           </TableCell>
+                          <TableCell align="center">{user.is_admin ? "Admin" : "User"}</TableCell>
                           <TableCell align="center">
                             <BiPencil
                               style={{
@@ -229,7 +233,7 @@ const User = () => {
                             <BiX
                               style={{ cursor: "pointer", fontSize: 20 }}
                               onClick={() => {
-                                handleDeleteUser(user._id);
+                                handleDeleteUser(user.id);
                               }}
                             />
                           </TableCell>
