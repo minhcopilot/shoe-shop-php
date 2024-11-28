@@ -1,4 +1,3 @@
-import { yupResolver } from "@hookform/resolvers/yup";
 import {
   Button,
   FormControl,
@@ -14,23 +13,19 @@ import Fade from "@material-ui/core/Fade";
 import Modal from "@material-ui/core/Modal";
 import { unwrapResult } from "@reduxjs/toolkit";
 import React, { useEffect, useState } from "react";
-import { Controller, useForm } from "react-hook-form";
 import { useDispatch } from "react-redux";
 import { toast, ToastContainer } from "react-toastify";
-import * as yup from "yup";
 import { signUp } from "../../../../redux/slices/authSlice";
-import { updateUser, getAllUser } from "../../../../redux/slices/userSlice";
+import { getAllUser } from "../../../../redux/slices/userSlice";
 import { useStyles } from "./styles";
-
-const schema = yup.object().shape({
-  fullName: yup.string().required(),
-  email: yup.string().required().email(),
-  password: yup.string().required().min(8, "Password is 8 characters long"),
-});
+import userAPI from "../../../../api/userApi";
 
 const AddEditUser = ({ open, handleClose, user, handleData }) => {
   const classes = useStyles();
 
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [value, setValue] = useState("false");
 
   const handleChange = (event) => {
@@ -38,95 +33,87 @@ const AddEditUser = ({ open, handleClose, user, handleData }) => {
   };
 
   const dispatch = useDispatch();
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    control,
-    reset,
-    setError,
-  } = useForm({
-    resolver: yupResolver(schema),
-  });
 
-  const handleAddUser = (data) => {
+  const handleAddUser = async () => {
     const user = {
-      email: data.email,
-      fullName: data.fullName,
-      isAdmin: value,
-      password: data.password,
+      name,
+      email,
+      password,
+      is_admin: value === "true" ? 1 : 0, // Chuyển từ "true"/"false" thành 1/0
     };
 
-    const action = signUp(user);
-    dispatch(action)
-      .then(unwrapResult)
-      .then((res) => {
-        handleClose();
-        reset();
-        setValue("false");
-        const action2 = getAllUser();
-        dispatch(action2);
+    try {
+      // Gọi API để tạo người dùng mới
+      const result = await userAPI.addUser(user);
 
-        toast("Thêm người dùng thành công!", {
-          position: "bottom-center",
-          autoClose: 3000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          progress: undefined,
-          type: "success",
-        });
-      })
-      .catch((error) => {
-        setError(error.message);
+      // Sau khi thành công, đóng modal, reset form và thông báo cho người dùng
+      handleClose();
+      setName("");
+      setEmail("");
+      setPassword("");
+      setValue("false");
+      toast("Thêm người dùng thành công!", {
+        position: "bottom-center",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        type: "success",
       });
+
+      // Lấy lại danh sách người dùng mới
+      dispatch(getAllUser());
+    } catch (error) {
+      toast.error("Đã xảy ra lỗi khi thêm người dùng", {
+        position: "bottom-center",
+        autoClose: 3000,
+      });
+    }
   };
 
-  const handleUpdateUser = (data) => {
+  const handleUpdateUser = async () => {
     const newUser = {
-      fullName: data.fullName,
-      email: data.email,
-      isAdmin: value,
-      _id: user._id,
+      is_admin: value === "true" ? 1 : 0, // Chuyển từ "true"/"false" thành 1/0
+      _id: user.id, // Thêm id người dùng để xác định bản ghi cần cập nhật
     };
 
-    const action = updateUser(newUser);
-    dispatch(action)
-      .then(unwrapResult)
-      .then((res) => {
-        handleClose();
-        reset();
-        setValue("false");
-        const action2 = getAllUser();
-        dispatch(action2);
+    try {
+      const result = await userAPI.updateUser(newUser);
 
-        toast("Cập nhật người dùng thành công!", {
-          position: "bottom-center",
-          autoClose: 3000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          progress: undefined,
-          type: "success",
-        });
-      })
-      .catch((error) => {
-        setError(error.message);
+      handleClose();
+      setValue("false"); // Reset lại trạng thái của radio button
+
+      toast("Cập nhật quyền thành công!", {
+        position: "bottom-center",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        type: "success",
       });
+
+      dispatch(getAllUser()); // Cập nhật lại danh sách người dùng
+
+    } catch (error) {
+      toast.error("Đã xảy ra lỗi khi cập nhật quyền", {
+        position: "bottom-center",
+        autoClose: 3000,
+      });
+    }
   };
 
   useEffect(() => {
     if (user) {
-      reset({
-        fullName: user.fullName,
-        email: user.email,
-        password: "123123123",
-      });
-      setValue(user.isAdmin.toString());
+      setName(user.name);
+      setEmail(user.email);
+      setValue(user.is_admin.toString());
     }
   }, [user]);
+
   return (
     <>
       <Modal
@@ -136,7 +123,10 @@ const AddEditUser = ({ open, handleClose, user, handleData }) => {
         open={open}
         onClose={() => {
           handleClose();
-          reset();
+          setName("");
+          setEmail("");
+          setPassword("");
+          setValue("false");
         }}
         closeAfterTransition
         BackdropComponent={Backdrop}
@@ -147,86 +137,66 @@ const AddEditUser = ({ open, handleClose, user, handleData }) => {
         <Fade in={open}>
           <form
             className={classes.paper}
-            onSubmit={handleSubmit(user ? handleUpdateUser : handleAddUser)}
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (user) {
+                handleUpdateUser();
+              } else {
+                handleAddUser();
+              }
+            }}
           >
             <TextField
               label="Họ tên"
               variant="outlined"
               required
               className={classes.input}
-              {...register("fullName")}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              disabled={!!user} // Disable field khi update
+            />
+            <TextField
+              label="Email"
+              type="email"
+              variant="outlined"
+              required
+              className={classes.input}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              disabled={!!user} // Disable field khi update
             />
             {!user && (
               <TextField
                 label="Mật khẩu"
-                {...register("password")}
-                type="password"
                 variant="outlined"
                 required
+                type="password"
                 className={classes.input}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
               />
             )}
-            <TextField
-              label="Email"
-              type="email"
-              {...register("email")}
-              variant="outlined"
-              required
-              className={classes.input}
-            />
             <FormControl component="fieldset" className={classes.formControl}>
               <FormLabel component="legend" className={classes.radioHeading}>
                 Quyền
               </FormLabel>
-              <Controller
-                name="role"
-                rules={{ required: true }}
-                control={control}
-                // defaultValue="business"
-                render={({ field }) => (
-                  <RadioGroup
-                    {...field}
-                    value={value}
-                    onChange={handleChange}
-                    className={classes.radioContainer}
-                  >
-                    <FormControlLabel
-                      value="true"
-                      control={
-                        <Radio
-                          style={{
-                            color: "#1a202c",
-                            "&$checked": {
-                              color: "#1a202c",
-                            },
-                          }}
-                        />
-                      }
-                      label="Admin"
-                    />
-                    <FormControlLabel
-                      value="false"
-                      control={
-                        <Radio
-                          style={{
-                            color: "#1a202c",
-                            "&$checked": {
-                              color: "#1a202c",
-                            },
-                          }}
-                        />
-                      }
-                      label="Khách hàng"
-                    />
-                  </RadioGroup>
-                )}
-              />
+              <RadioGroup
+                value={value}
+                onChange={handleChange}
+                className={classes.radioContainer}
+              >
+                <FormControlLabel
+                  value="true"
+                  control={<Radio style={{ color: "#1a202c" }} />}
+                  label="Admin"
+                />
+                <FormControlLabel
+                  value="false"
+                  control={<Radio style={{ color: "#1a202c" }} />}
+                  label="User"
+                />
+              </RadioGroup>
             </FormControl>
-            {errors.password && (
-              <Typography component="p" className={classes.error}>
-                {errors.password.message}
-              </Typography>
-            )}
             <Button className={classes.save} type="submit">
               Lưu
             </Button>

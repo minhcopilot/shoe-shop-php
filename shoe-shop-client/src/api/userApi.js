@@ -2,10 +2,14 @@ import axiosClient from './axiosClient'
 
 const userAPI = {
 	getAllUser: async (params) => {
-		const url = '/users'
-		return await axiosClient.get(url, { params })
+		const url = '/users';
+		
+		if (!params || !params.search) {
+		  return await axiosClient.get(url);  // Gửi request mà không có query string
+		}
+	   
+		return await axiosClient.get(url, { params }); // Gửi với query params
 	},
-
 	addUser: async (data) => {
 		const url = '/users'
 		return await axiosClient.post(url, data)
