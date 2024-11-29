@@ -5,7 +5,7 @@ const orderAPI = {
 	  const url = '/orders';
 	  try {
 		const response = await axiosClient.get(url);
-		console.log("API Response:", response); // Log để kiểm tra
+
   
 		// Kiểm tra phản hồi hợp lệ
 		if (!response.orders || !Array.isArray(response.orders)) {
@@ -27,7 +27,7 @@ const orderAPI = {
       const response = await axiosClient.post(url, data);
       return response.data;
     } catch (error) {
-      console.error('Error adding order:', error);
+      console.error('Error adding order:', error.response?.data || error.message);
       throw error;
     }
   },
@@ -44,16 +44,27 @@ const orderAPI = {
     }
   },
 
-  getOrderDetail: async (id) => {
-    const url = `/order/detail/${id}`; // Cập nhật URL với chi tiết đơn hàng
+   getOrderDetail : async (orderId) => {
+    const url = `/order/detail/${orderId}`; // Cập nhật URL với chi tiết đơn hàng
     try {
       const response = await axiosClient.get(url);
-      return response.data;
+
+      
+      // Kiểm tra phản hồi hợp lệ và trả về chi tiết đơn hàng
+      if (!response || !response.order) {
+        throw new Error("Không có dữ liệu đơn hàng");
+      }
+  
+      // Nếu dữ liệu hợp lệ, trả về thông tin chi tiết đơn hàng
+      return response; // Trả về toàn bộ response để xử lý bên ngoài
     } catch (error) {
-      console.error('Error fetching order details:', error);
-      throw error;
+      console.error("Error fetching order details:", error.message);
+      throw error; // Ném lỗi để thông báo cho component gọi API
     }
   },
+  
+  
+ 
 
   // Xóa đơn hàng
   deleteOrder: async (id) => {

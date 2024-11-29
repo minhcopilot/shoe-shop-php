@@ -156,6 +156,7 @@ const useStyles = makeStyles((theme) => ({
 	checkout: {
 		display: 'flex',
 		alignItems: 'center',
+
 	},
 	checkoutBtn: {
 		padding: '15px 30px',
@@ -176,7 +177,6 @@ const useStyles = makeStyles((theme) => ({
 		bottom: 15,
 		left: '50%',
 		transform: 'translateX(-50%)',
-		// paddingTop: 10,
 	},
 	tableRow: {
 		display: 'flex',
@@ -185,6 +185,114 @@ const useStyles = makeStyles((theme) => ({
 	checkbox: {
 		color: theme.palette.text.primary,
 	},
+
+
+
+	////thanh toan 
+	modal: {
+		display: "flex",
+		justifyContent: "center",
+		alignItems: "center",
+		backdropFilter: "blur(10px)",
+	  },
+	  modalContent: {
+		backgroundColor: "#fff",
+		padding: "20px",
+		borderRadius: "8px",
+		width: "500px",
+		maxHeight: "95vh", // Giới hạn chiều cao của modal
+		overflow: "hidden",
+		display: "flex",
+		flexDirection: "column",
+		boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+	  },
+	  modalCard: {
+		backgroundColor: "#fafafa",
+		borderRadius: "8px",
+		padding: "20px",
+		display: "flex",
+		flexDirection: "column",
+		height: "100%",
+	  },
+	  modalTitle: {
+		fontSize: "24px",
+		fontWeight: "bold",
+		marginBottom: "15px",
+		textAlign: "center",
+	  },
+	  modalBody: {
+		flex: 1,
+		maxHeight: "120px", // Giới hạn chiều cao của danh sách sản phẩm
+		overflowY: "auto", // Cho phép cuộn dọc
+		marginBottom: "5px",
+		paddingRight: "10px",
+	  },
+	  productItem: {
+		marginBottom: "15px",
+		paddingBottom: "10px",
+		borderBottom: "1px solid #ddd",
+	  },
+	  productInfo: {
+		display: "flex",
+		alignItems: "center",
+		justifyContent: "space-between",
+		marginBottom: "10px",
+	  },
+	  productImg: {
+		width: "50px",
+		height: "50px",
+		marginRight: "10px",
+	  },
+	  productName: {
+		fontWeight: "bold",
+		fontSize: "16px",
+		flexGrow: 1,
+	  },
+	  productSize: {
+		fontSize: "14px",
+		color: "#555",
+		marginLeft: "10px",
+	  },
+	  productDetails: {
+		display: "flex",
+		justifyContent: "space-between",
+		fontSize: "14px",
+		color: "#555",
+	  },
+	  paymentForm: {
+		marginTop: "20px",
+		flexShrink: 0,
+	  },
+	  formGroup: {
+		marginBottom: "15px",
+	  },
+	  selectInput: {
+		width: "100%",
+		padding: "10px",
+		borderRadius: "5px",
+		border: "1px solid #ddd",
+		marginTop: "5px",
+	  },
+	  textInput: {
+		width: "100%",
+		padding: "10px",
+		borderRadius: "5px",
+		border: "1px solid #ddd",
+		marginTop: "5px",
+	  },
+	 
+	  modalFooter: {
+		display: 'flex',
+		alignItems: 'center',
+		justifyContent: 'flex-end',  // Đảm bảo nút thanh toán căn phải
+	  },
+	  totalAmount: {
+		display: 'flex',
+		justifyContent: 'space-between', // Tổng tiền nằm bên trái, nút thanh toán bên phải
+		alignItems: 'center',
+		marginBottom: '5px', // Khoảng cách dưới
+	  },
+	 
 }))
 
 export { useStyles }
