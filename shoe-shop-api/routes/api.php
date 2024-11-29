@@ -8,6 +8,7 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\ProductsController;
 use App\Http\Controllers\SizesController;
 use App\Http\Controllers\ChatController;
+
 Route::get('/cart', [CartController::class, 'getCart']);
 Route::post('/cart', [CartController::class, 'addToCart']);
 Route::put('/cart', [CartController::class, 'updateCart']);
@@ -20,13 +21,13 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\CategoryController;
 
 
-
 Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/cart', [CartController::class, 'getCart']);
-    Route::post('/cart/add', [CartController::class, 'addToCart']);
-    Route::put('/cart/update', [CartController::class, 'updateCart']);
-    Route::delete('/cart/remove', [CartController::class, 'removeFromCart']);
+    Route::get('/cart', [CartController::class, 'getCart']); // Fetch user's cart
+    Route::post('/cart/add', [CartController::class, 'addToCart']); // Add to cart
+    Route::put('/cart/update/{cart_id}', [CartController::class, 'updateCart']); // Update cart item
+    Route::delete('/cart/remove/{cart_id}', [CartController::class, 'removeFromCart']); // Remove item from cart
 });
+
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/order/add', [OrderController::class, 'createOrder']);
@@ -34,13 +35,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/orders', [OrderController::class, 'getOrderHistory']);
     Route::delete('/order/delete/{order}', [OrderController::class, 'deleteOrder']);
     Route::get('/orders/search', [OrderController::class, 'searchOrders']);
+    Route::get('/order/detail/{orderId}', [OrderController::class, 'getOrderDetail']);
 });
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 //category
-Route::prefix('categories')->group(function ()  {
+Route::prefix('categories')->group(function () {
     Route::get('', [CategoryController::class, 'index']);
     Route::post('', [CategoryController::class, 'store']);
     Route::get('/{category}', [CategoryController::class, 'show']);
@@ -68,6 +70,7 @@ Route::prefix('sizes')->group(function () {
     Route::put('/{id}', [SizesController::class, 'update']);
     Route::delete('/{id}', [SizesController::class, 'destroy']);
 });
+
 Route::middleware('auth:sanctum')->get('/auth/user', [AuthController::class, 'getUser']);
 
 // Đăng ký và đăng nhập
@@ -101,8 +104,8 @@ Route::get('/email/verify/{id}/{hash}', function ($id, $hash) {
         event(new Verified($user));
     }
 
-     // Chuyển hướng đến trang verify-successful
-     return redirect('http://localhost:3000/verify-successful');
+    // Chuyển hướng đến trang verify-successful
+    return redirect('http://localhost:3000/verify-successful');
 })->name('verification.verify');
 // Route chỉ dành cho người dùng đã xác thực email
 Route::middleware(['auth:sanctum', 'verified'])->group(function () {

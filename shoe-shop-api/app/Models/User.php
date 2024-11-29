@@ -20,8 +20,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'is_admin',
         'cart',
         'google_id',
-        'email_verified_at',
-        'cart' 
+        'email_verified_at'
     ];
 
     protected $hidden = [
