@@ -1,14 +1,15 @@
 <?php
 namespace App\Http\Controllers\Api;
+use App\Models\User;
 use Illuminate\Http\Request;
 use App\Services\AuthService;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
 use App\Http\Requests\Api\Auth\LoginRequest;
 use Illuminate\Validation\ValidationException;
 use App\Http\Requests\Api\Auth\RegisterRequest;
-use App\Models\User;
 
 class AuthController extends Controller
 {
@@ -17,30 +18,57 @@ class AuthController extends Controller
     {
         $this->authService = $authService;
     }
-    public function register(RegisterRequest $registerRequest)
+    public function register(RegisterRequest $request)
     {
-        $params = $registerRequest->validated();
-        $result = $this->authService->register($params);
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users',
+            'password' => 'required|string|min:8|confirmed',
+            'is_admin' => 'required|in:1,0',
+            'password_confirmation' => 'required|same:password',
+        ]);
 
-        if ($result) {
-            return response()->json([
-                'message' => 'Register success',
-                'user' => $result['user'],
-                'token' => $result['token'],
-            ]);
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 400);
+        }
+        $emailExists = User::where('email', $request->email)->exists();
+
+        if ($emailExists) {
+            return response()->json(['message' => 'Email already exists in the system.'], 409); // Trả về mã lỗi 409 nếu email trùng
         }
 
-        return response()->json(['message' => 'Register failed'], 400);
+        $user = User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+        ]);
+
+        $user->sendEmailVerificationNotification();
+
+        return response()->json([
+            'message' => 'User registered successfully. Please verify your email before logging in.',
+            'user' => $user,
+        ], 201);
     }
 
-    public function login(LoginRequest $loginRequest)
+    public function login(Request $request)
     {
-        $params = $loginRequest->validated();
-        $result = $this->authService->login($params);
-        if ($result['code'] == 200) {
-            return response()->api_success($result['message'], $result);
+        $validatedData = $request->validate([
+            'email' => 'required|email',
+            'password' => 'required|string|min:8',
+        ]);
+        $user = User::where('email', $validatedData['email'])->first();
+
+        if (!$user || !Hash::check($validatedData['password'], $user->password)) {
+            return response()->json(['message' => 'Email or password is incorrect'], 401);
         }
-        return response()->api_error($result['message'], $result['code']);
+        $token = $user->createToken('YourAppName')->plainTextToken;   
+        $result = ['message' => 'Login success',
+                'code' => 200,
+                'token' => $token,
+                'user' => $user
+       ];
+        return response()->api_success($result['message'], $result);
     }
     public function logout()
     {
@@ -72,28 +100,27 @@ class AuthController extends Controller
     // Xử lý reset mật khẩu
     public function resetPassword(Request $request)
     {
-        $request->validate([
-            'email' => 'required|email|exists:users,email',
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email',
             'token' => 'required',
-            'password' => 'required|confirmed|min:8',
+            'password' => 'required|confirmed|min:6',
         ]);
 
-        $status = Password::reset(
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+        
+        $response = Password::reset(
             $request->only('email', 'password', 'password_confirmation', 'token'),
-            function (User $user, $password) {
-                $user->forceFill([
-                    'password' => Hash::make($password),
-                ])->save();
+            function ($user, $password) {
+                $user->password = bcrypt($password);
+                $user->save();
             }
         );
 
-        if ($status === Password::PASSWORD_RESET) {
-            return response()->json(['message' => 'Password reset successfully.']);
-        }
-
-        throw ValidationException::withMessages([
-            'email' => [trans($status)],
-        ]);
+        return $response == Password::PASSWORD_RESET
+            ? response()->json(['status' => trans($response)], 200)
+            : response()->json(['error' => trans($response)], 400);
     }
 
     public function getUser(Request $request)
