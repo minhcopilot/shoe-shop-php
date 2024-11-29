@@ -9,11 +9,6 @@ use App\Http\Controllers\ProductsController;
 use App\Http\Controllers\SizesController;
 use App\Http\Controllers\ChatController;
 
-Route::get('/cart', [CartController::class, 'getCart']);
-Route::post('/cart', [CartController::class, 'addToCart']);
-Route::put('/cart', [CartController::class, 'updateCart']);
-Route::delete('/cart', [CartController::class, 'removeFromCart']);
-
 use App\Http\Controllers\OrderController;
 
 use App\Http\Controllers\UserController;
@@ -34,7 +29,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/order/update/{order}', [OrderController::class, 'updateOrderStatus']);
     Route::get('/orders', [OrderController::class, 'getOrderHistory']);
     Route::delete('/order/delete/{order}', [OrderController::class, 'deleteOrder']);
-    Route::get('/orders/search', [OrderController::class, 'searchOrders']);
+    Route::post('/orders/search', [OrderController::class, 'searchOrders']);
     Route::get('/order/detail/{orderId}', [OrderController::class, 'getOrderDetail']);
 });
 

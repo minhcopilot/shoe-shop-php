@@ -1,119 +1,127 @@
 import { Button, MenuItem, TextField, Typography } from "@material-ui/core";
-import Backdrop from "@material-ui/core/Backdrop";
-import Fade from "@material-ui/core/Fade";
 import Modal from "@material-ui/core/Modal";
+import Fade from "@material-ui/core/Fade";
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { useDispatch } from "react-redux";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { updateOrder } from "../../../../redux/slices/orderSlice";
+import orderAPI from "../../../../api/orderApi";  // Đảm bảo đường dẫn đúng
 import { useStyles } from "./styles";
 
-const AddEditOrder = ({ open, handleClose, order, updateSuccess }) => {
+const AddEditOrder = ({ open, handleClose, order = {}, updateSuccess }) => {
   const classes = useStyles();
-  const dispatch = useDispatch();
   const { register, handleSubmit, reset } = useForm();
   const [error, setError] = useState("");
+  const [formData, setFormData] = useState({
+    status: order?.status || "", // Khởi tạo trạng thái
+  });
+  const [modalOpen, setModalOpen] = useState(open);  // Trạng thái mở modal
 
-  const handleEditOrder = (data) => {
-    const action = updateOrder({
-      id: order._id,
-      status: data.status,
-    });
-    dispatch(action)
-      .unwrap()
-      .then((res) => {
-        updateSuccess(res);
-        handleClose();
-        setError("");
-        reset();
-        toast("Edit size successfully!", {
-          position: "bottom-center",
-          autoClose: 3000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          progress: undefined,
-          type: "success",
-        });
-      })
-      .catch((error) => {
-        console.log(error);
-        setError(error.data.message);
+  // Hàm để cập nhật trạng thái đơn hàng
+  const handleEditOrder = async (data) => {
+    // Kiểm tra nếu `order` hoặc `order.id` không hợp lệ
+    if (!order?.id) {
+      setError("ID đơn hàng không hợp lệ.");
+      return;
+    }
+  
+    console.log("Order ID:", order.id); // In ra ID đơn hàng
+    console.log("Form Status:", formData.status); // In ra status được chọn từ form
+  
+    try {
+      // Gọi API updateOrder với id đơn hàng và status mới
+      const updatedOrder = await orderAPI.updateOrder(order.id, {
+        status: formData.status, // Sử dụng status từ formData thay vì từ data
       });
+  
+      // Kiểm tra nếu updatedOrder hợp lệ
+      if (updatedOrder && updatedOrder.id) {
+        // Cập nhật lại UI sau khi thành công
+        updateSuccess(updatedOrder); // Giả sử bạn cần cập nhật lại danh sách đơn hàng hoặc làm mới UI
+      } else {
+        setError("Cập nhật không thành công, không có dữ liệu trả về.");
+      }
+  
+      // Đóng modal và reset form
+      setModalOpen(false);  // Đóng modal
+      setError("");  // Reset lỗi
+      setFormData({
+        status: updatedOrder.status, // Cập nhật lại formData sau khi cập nhật
+      });
+  
+      // Thông báo thành công
+      toast.success("Cập nhật đơn hàng thành công", {
+        position: "bottom-center",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+  
+      // Reset form khi đóng modal
+      reset();
+  
+    } catch (error) {
+      console.error("Error during update:", error);
+      setError(error?.response?.data?.message || "Cập nhật không thành công");
+    }
+  };
+  
+
+  // Hàm xử lý khi người dùng thay đổi trạng thái
+  const handleStatusChange = (e) => {
+    setFormData((prevData) => ({
+      ...prevData,
+      status: e.target.value, // Cập nhật trạng thái
+    }));
   };
 
+  // Reset form khi có sự thay đổi order
   useEffect(() => {
-    order &&
-      reset({
-        status: order.status.toString(),
-      });
-  }, [order]);
+    if (order?.id) {
+      setFormData({ status: order.status || "" }); // Khởi tạo lại trạng thái của đơn hàng
+      reset({ status: order.status.toString() }); // Reset form với giá trị status
+    }
+  }, [order, reset]);
+
   return (
     <>
       <Modal
-        aria-labelledby="transition-modal-title"
-        aria-describedby="transition-modal-description"
-        className={classes.modal}
-        open={open}
+        open={modalOpen}
         onClose={() => {
-          handleClose();
-          reset();
-          setError("");
+          setModalOpen(false);
+          handleClose();  // Đóng modal khi đóng
+          reset();  // Reset form khi đóng modal
+          setError("");  // Clear any errors
         }}
         closeAfterTransition
-        BackdropComponent={Backdrop}
-        BackdropProps={{
-          timeout: 300,
-        }}
+        className={classes.modal}
       >
-        <Fade in={open}>
-          <form
-            className={classes.paper}
-            onSubmit={handleSubmit(handleEditOrder)}
-          >
+        <Fade in={modalOpen}>
+          <form className={classes.paper} onSubmit={(e) => { e.preventDefault(); handleEditOrder(); }}>
             <TextField
               id="select"
               select
               variant="outlined"
               className={classes.input}
-              label={order ? "" : "Price"}
-              // onChange={handleChangePrice}
-              InputLabelProps={{ shrink: false }}
-              {...register("status")}
-              defaultValue={order?.status.toString()}
+              label="Trạng thái đơn hàng"
+              value={formData.status}  // Sử dụng giá trị trong formData
+              onChange={handleStatusChange}  // Khi thay đổi trạng thái
             >
-              <MenuItem value="Pending">Chờ xử lý</MenuItem>
-              <MenuItem value="Delivered">Đã giao</MenuItem>
-              <MenuItem value="Canceled">Đã hủy</MenuItem>
+              <MenuItem value="Đã xác nhận">Đã xác nhận</MenuItem>
+              <MenuItem value="Đang giao hàng">Đang giao hàng</MenuItem>
+              <MenuItem value="Huỷ">Huỷ</MenuItem>
+              <MenuItem value="Thành công">Thành công</MenuItem>
             </TextField>
-
-            {error !== "" && (
-              <Typography component="p" className={classes.error}>
-                {error}
-              </Typography>
-            )}
+            {error && <Typography className={classes.error}>{error}</Typography>}
             <Button className={classes.save} type="submit">
               Lưu
             </Button>
           </form>
         </Fade>
       </Modal>
-      <ToastContainer
-        position="bottom-center"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="dark"
-        type="default"
-      />
+      <ToastContainer />
     </>
   );
 };

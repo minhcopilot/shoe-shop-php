@@ -1,23 +1,23 @@
 import axiosClient from './axiosClient';
 
 const orderAPI = {
-	getAllOrders: async () => {
-	  const url = '/orders';
-	  try {
-		const response = await axiosClient.get(url);
 
-  
-		// Kiểm tra phản hồi hợp lệ
-		if (!response.orders || !Array.isArray(response.orders)) {
-		  throw new Error("No orders found in the response");
-		}
-  
-		return response.orders; // Trả về mảng orders
-	  } catch (error) {
-		console.error("Error fetching orders:", error.message);
-		throw error;
-	  }
-	},
+  getAllOrders: async () => {
+    const url = '/orders'; // Endpoint để lấy danh sách đơn hàng
+    try {
+      const response = await axiosClient.get(url);
+      
+      // Kiểm tra phản hồi hợp lệ
+      if (!response.orders || !Array.isArray(response.orders)) {
+        throw new Error("No orders found in the response");
+      }
+      
+      return response.orders; // Trả về mảng orders
+    } catch (error) {
+      console.error("Error fetching orders:", error.message);
+      throw error;
+    }
+  },
   
 
   // Thêm đơn hàng mới
@@ -37,10 +37,10 @@ const orderAPI = {
     const url = `/order/update/${id}`;
     try {
       const response = await axiosClient.put(url, data);
-      return response.data;
+      return response.data;  // Trả về dữ liệu sau khi cập nhật thành công
     } catch (error) {
       console.error('Error updating order:', error);
-      throw error;
+      throw error;  // Ném lỗi để có thể bắt lại ở nơi gọi API
     }
   },
 
@@ -78,15 +78,18 @@ const orderAPI = {
     }
   },
 
-  // Tìm kiếm đơn hàng theo trạng thái
   searchOrders: async (status) => {
-    const url = '/orders/search';
+    const url = '/orders/search'; // Đảm bảo URL đúng với backend API
+  
     try {
-      const response = await axiosClient.get(url, { params: { status } });
+      // Gửi yêu cầu POST với status
+      const response = await axiosClient.post(url, { status });  // Gửi status trong body của yêu cầu POST
+  
+      // Trả về kết quả tìm kiếm từ response
       return response.data;
     } catch (error) {
-      console.error('Error searching orders:', error);
-      throw error;
+      console.error('Lỗi khi tìm kiếm đơn hàng:', error);
+      throw error; // Ném lỗi để xử lý ở nơi khác nếu cần
     }
   }
 }

@@ -1,6 +1,184 @@
+
+// import React, { useEffect, useRef, useState } from "react";
+// import {
+//   Box,
+//   IconButton,
+//   Paper,
+//   Table,
+//   TableBody,
+//   TableCell,
+//   TableContainer,
+//   TableHead,
+//   TableRow,
+//   TextField,
+//   Typography,
+// } from "@material-ui/core";
+// import { BiPencil, BiSearchAlt2, BiX } from "react-icons/bi";
+// import { Helmet } from "react-helmet-async";
+// import AdminLayout from "../../../component/admin/AdminLayout/AdminLayout";
+// import AddEditOrder from "./AddEditOrder/AddEditOrder";
+// import orderAPI from "../../../api/orderApi";
+// import { useStyles } from "./styles";
+
+// const Order = () => {
+//   const classes = useStyles();
+//   const [orders, setOrders] = useState([]);
+//   const [filteredOrders, setFilteredOrders] = useState([]);
+//   const [open2, setOpen2] = useState(false);
+//   const [updateOrder, setUpdateOrder] = useState(null);
+//   const searchRef = useRef("");
+
+//   // Fetch all orders on initial load
+//   useEffect(() => {
+//     const fetchOrders = async () => {
+//       try {
+//         const ordersFromAPI = await orderAPI.getAllOrders();
+//         setOrders(ordersFromAPI);
+//         setFilteredOrders(ordersFromAPI);
+//       } catch (error) {
+//         console.error("Lỗi khi lấy danh sách đơn hàng:", error);
+//       }
+//     };
+//     fetchOrders();
+//   }, []);
+
+//   // Open modal to edit order
+//   const handleOpen2 = (order) => {
+//     setUpdateOrder(order);
+//     setOpen2(true);
+//   };
+
+//   const handleClose2 = () => {
+//     setOpen2(false);
+//   };
+
+//   // Handle search input change and debounce
+//  // Handle search input change and debounce
+// const handleChangeSearch = async (e) => {
+//   const value = e.target.value;
+
+//   // Clear any previous timeout and set a new one for debounce
+//   if (searchRef.current) {
+//     clearTimeout(searchRef.current);
+//   }
+
+//   searchRef.current = setTimeout(async () => {
+//     if (!value) {
+//       // If no search query, show all orders
+//       setFilteredOrders(orders);
+//     } else {
+//       // Filter orders based on the status matching the substring
+//       const filtered = orders.filter((order) =>
+//         order.status.toLowerCase().includes(value.toLowerCase())
+//       );
+//       setFilteredOrders(filtered); // Set filtered orders
+//     }
+//   }, 400); // Debounce with 400ms delay
+// };
+
+//   // Update orders when successfully editing
+//   const handleUpdateSuccess = (data) => {
+//     const updatedOrders = orders.map((order) =>
+//       order.id === data.id ? { ...order, ...data } : order
+//     );
+//     setOrders(updatedOrders);
+//     setFilteredOrders(updatedOrders);
+//   };
+
+//   // Get status color based on order status
+//   const getStatusColor = (status) => {
+//     switch (status) {
+//       case "Chờ xác nhận":
+//         return "blue";
+//       case "Đã xác nhận":
+//         return "green";
+//       case "Đang giao hàng":
+//         return "yellow";
+//       case "Huỷ":
+//         return "red";
+//       default:
+//         return "grey"; // Default color for other statuses
+//     }
+//   };
+
+//   return (
+//     <AdminLayout>
+//       <Box className={classes.home}>
+//         <Box className={classes.searchBar}>
+//           <TextField
+//             placeholder="Tìm kiếm theo trạng thái"
+//             variant="outlined"
+//             className={classes.searchField}
+//             onChange={handleChangeSearch}
+//           />
+//           <IconButton className={classes.searchBtn}>
+//             <BiSearchAlt2 />
+//           </IconButton>
+//         </Box>
+
+//         <TableContainer component={Paper}>
+//           <Table>
+//             <TableHead>
+//               <TableRow>
+//                 <TableCell align="center">ID đơn hàng</TableCell>
+//                 <TableCell align="center">Ngày tạo</TableCell>
+//                 <TableCell align="center">Giá giao hàng</TableCell>
+//                 <TableCell align="center">Trạng thái</TableCell>
+//                 <TableCell align="center">Thao tác</TableCell>
+//               </TableRow>
+//             </TableHead>
+//             <TableBody>
+//               {filteredOrders.map((order) => (
+//                 <TableRow key={order.id}>
+//                   <TableCell align="center">{order.id}</TableCell>
+//                   <TableCell align="center">
+//                     {new Date(order.created_at).toLocaleDateString()}
+//                   </TableCell>
+//                   <TableCell align="center">
+//                     {new Intl.NumberFormat("vi-VN").format(order.total_price)} VND
+//                   </TableCell>
+//                   <TableCell align="center">
+//                     <Typography
+//                       style={{
+//                         color: getStatusColor(order.status),
+//                         fontWeight: "bold",
+//                       }}
+//                     >
+//                       {order.status}
+//                     </Typography>
+//                   </TableCell>
+//                   <TableCell align="center">
+//                     {/* Disable edit button if the order is cancelled */}
+//                     {order.status !== "Huỷ" && (
+//                       <IconButton onClick={() => handleOpen2(order)}>
+//                         <BiPencil />
+//                       </IconButton>
+//                     )}
+//                   </TableCell>
+//                 </TableRow>
+//               ))}
+//             </TableBody>
+//           </Table>
+//         </TableContainer>
+
+//         {updateOrder && (
+//           <AddEditOrder
+//             open={open2}
+//             handleClose={handleClose2}
+//             order={updateOrder}
+//             updateSuccess={handleUpdateSuccess}
+//           />
+//         )}
+//       </Box>
+//     </AdminLayout>
+//   );
+// };
+
+// export default Order;
+
+import React, { useEffect, useRef, useState } from "react";
 import {
   Box,
-  Button,
   IconButton,
   Paper,
   Table,
@@ -12,170 +190,172 @@ import {
   TextField,
   Typography,
 } from "@material-ui/core";
-import React, { useEffect, useRef, useState } from "react";
-import { Helmet } from "react-helmet-async";
 import { BiPencil, BiSearchAlt2, BiX } from "react-icons/bi";
-import { useDispatch, useSelector } from "react-redux";
+import { Helmet } from "react-helmet-async";
 import AdminLayout from "../../../component/admin/AdminLayout/AdminLayout";
-import { getAllOrder } from "../../../redux/slices/orderSlice";
 import AddEditOrder from "./AddEditOrder/AddEditOrder";
+import orderAPI from "../../../api/orderApi";
 import { useStyles } from "./styles";
 
 const Order = () => {
   const classes = useStyles();
-  const a = useSelector((state) => state.order.orders);
-  const [orders, setOders] = useState(a);
-  const dispatch = useDispatch();
+  const [orders, setOrders] = useState([]);
+  const [filteredOrders, setFilteredOrders] = useState([]);
+  const [noResults, setNoResults] = useState(false); // Trạng thái để kiểm tra không có kết quả
+  const [open2, setOpen2] = useState(false);
+  const [updateOrder, setUpdateOrder] = useState(null);
+  const searchRef = useRef("");
 
+  // Fetch all orders on initial load
   useEffect(() => {
-    const fetchOrders = () => {
-      const action = getAllOrder();
-      dispatch(action);
+    const fetchOrders = async () => {
+      try {
+        const ordersFromAPI = await orderAPI.getAllOrders();
+        setOrders(ordersFromAPI);
+        setFilteredOrders(ordersFromAPI);
+      } catch (error) {
+        console.error("Lỗi khi lấy danh sách đơn hàng:", error);
+      }
     };
     fetchOrders();
-    console.log(orders);
   }, []);
 
-  // Modal
-  const [open2, setOpen2] = useState(false);
-  const [updateOrder, setUpdateOrder] = useState();
+  // Open modal to edit order
   const handleOpen2 = (order) => {
     setUpdateOrder(order);
     setOpen2(true);
   };
+
   const handleClose2 = () => {
     setOpen2(false);
   };
 
-  // Search
-  const [filteredOrders, setFilteredOrders] = useState(orders);
-  const searchRef = useRef("");
-  const handleChangeSearch = (e) => {
+  // Handle search input change and debounce
+  const handleChangeSearch = async (e) => {
     const value = e.target.value;
-    console.log(value);
-    console.log(value);
+
+    // Clear any previous timeout and set a new one for debounce
     if (searchRef.current) {
       clearTimeout(searchRef.current);
     }
 
-    searchRef.current = setTimeout(() => {
-      if (value === "") setFilteredOrders(orders);
-
-      const filtered = orders.filter((order) => {
-        return order.status
-          .toString()
-          .toLowerCase()
-          .includes(value.toLowerCase());
-      });
-      setFilteredOrders(filtered);
-    }, 400);
+    searchRef.current = setTimeout(async () => {
+      if (!value) {
+        // If no search query, show all orders
+        setFilteredOrders(orders);
+        setNoResults(false); // Reset noResults if there's no search query
+      } else {
+        // Filter orders based on the status matching the substring
+        const filtered = orders.filter((order) =>
+          order.status.toLowerCase().includes(value.toLowerCase())
+        );
+        setFilteredOrders(filtered);
+        setNoResults(filtered.length === 0); // Set noResults if no orders match
+      }
+    }, 400); // Debounce with 400ms delay
   };
-  const handleUpdate = (data) => {
-    const updatedOrders = orders.map((order) =>
-      order._id === data.newOrder._id ? data.newOrder : order
-    );
-    console.log(orders, data.newOrder, updatedOrders);
 
+  // Update orders when successfully editing
+  const handleUpdateSuccess = (data) => {
+    const updatedOrders = orders.map((order) =>
+      order.id === data.id ? { ...order, ...data } : order
+    );
+    setOrders(updatedOrders);
     setFilteredOrders(updatedOrders);
   };
 
-  const handleDeleteOrder = (id) => {
-    console.log(id);
+  // Get status color based on order status
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "Chờ xác nhận":
+        return "blue";
+      case "Đã xác nhận":
+        return "green";
+      case "Đang giao hàng":
+        return "yellow";
+      case "Huỷ":
+        return "red";
+      default:
+        return "grey"; // Default color for other statuses
+    }
   };
+
   return (
-    <>
-      <Helmet>
-        <title>Reno - Admin</title>
-        <meta name="description" content="Helmet application" />
-      </Helmet>
-      <AdminLayout>
-        <Box className={classes.home}>
-          <Box className={classes.searchBar}>
-            <TextField
-              placeholder="Tìm kiếm theo trạng thái"
-              variant="outlined"
-              className={classes.searchField}
-              ref={searchRef}
-              onChange={handleChangeSearch}
-            />
-            <IconButton className={classes.searchBtn}>
-              <BiSearchAlt2 />
-            </IconButton>
-            {/* <Button className={classes.add}>Thêm đơn hàng</Button> */}
-          </Box>
-          <TableContainer
-            component={Paper}
-            elevation="0"
-            style={{ marginBottom: 25 }}
-          >
-            <Table className={classes.table} aria-label="simple table">
-              <TableHead>
-                <TableRow>
-                  <TableCell align="center" className={classes.tableHead}>
-                    ID đơn hàng
+    <AdminLayout>
+      <Box className={classes.home}>
+        <Box className={classes.searchBar}>
+          <TextField
+            placeholder="Tìm kiếm theo trạng thái"
+            variant="outlined"
+            className={classes.searchField}
+            onChange={handleChangeSearch}
+          />
+          <IconButton className={classes.searchBtn}>
+            <BiSearchAlt2 />
+          </IconButton>
+        </Box>
+
+        {noResults && (
+          <Typography color="error" align="center">
+            Không tìm thấy đơn hàng nào với trạng thái này.
+          </Typography>
+        )}
+
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell align="center">ID đơn hàng</TableCell>
+                <TableCell align="center">Ngày tạo</TableCell>
+                <TableCell align="center">Giá giao hàng</TableCell>
+                <TableCell align="center">Trạng thái</TableCell>
+                <TableCell align="center">Thao tác</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {filteredOrders.map((order) => (
+                <TableRow key={order.id}>
+                  <TableCell align="center">{order.id}</TableCell>
+                  <TableCell align="center">
+                    {new Date(order.created_at).toLocaleDateString()}
                   </TableCell>
-                  <TableCell align="center" className={classes.tableHead}>
-                    Ngày tạo
+                  <TableCell align="center">
+                    {new Intl.NumberFormat("vi-VN").format(order.total_price)} VND
                   </TableCell>
-                  <TableCell align="center" className={classes.tableHead}>
-                    Giá giao hàng
+                  <TableCell align="center">
+                    <Typography
+                      style={{
+                        color: getStatusColor(order.status),
+                        fontWeight: "bold",
+                      }}
+                    >
+                      {order.status}
+                    </Typography>
                   </TableCell>
-                  <TableCell align="center" className={classes.tableHead}>
-                    Trạng thái giao hàng
-                  </TableCell>
-                  <TableCell align="center" className={classes.tableHead}>
-                    Thao tác
+                  <TableCell align="center">
+                    {/* Disable edit button if the order is cancelled */}
+                    {order.status !== "Huỷ" && (
+                      <IconButton onClick={() => handleOpen2(order)}>
+                        <BiPencil />
+                      </IconButton>
+                    )}
                   </TableCell>
                 </TableRow>
-              </TableHead>
-              <TableBody>
-                {filteredOrders?.map((order) => (
-                  <TableRow>
-                    <TableCell
-                      component="th"
-                      scope="row"
-                      className={classes.cellProduct}
-                      align="center"
-                    >
-                      <Typography component="span">{order._id}</Typography>
-                    </TableCell>
-                    <TableCell align="center">
-                      {new Date(order.createdAt).toLocaleString()}
-                    </TableCell>
-                    <TableCell align="center">{order.totalPrice} VND</TableCell>
-                    <TableCell align="center">
-                      {order.status.toString()}
-                    </TableCell>
-                    <TableCell align="center">
-                      <BiPencil
-                        style={{
-                          cursor: "pointer",
-                          fontSize: 20,
-                          marginRight: 20,
-                        }}
-                        onClick={() => handleOpen2(order)}
-                      />
-                      <BiX
-                        style={{ cursor: "pointer", fontSize: 20 }}
-                        onClick={() => {
-                          handleDeleteOrder(order._id);
-                        }}
-                      />
-                    </TableCell>
-                  </TableRow>
-                ))}
-                <AddEditOrder
-                  open={open2}
-                  handleClose={handleClose2}
-                  order={updateOrder}
-                  updateSuccess={handleUpdate}
-                />
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </Box>
-      </AdminLayout>
-    </>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+
+        {updateOrder && (
+          <AddEditOrder
+            open={open2}
+            handleClose={handleClose2}
+            order={updateOrder}
+            updateSuccess={handleUpdateSuccess}
+          />
+        )}
+      </Box>
+    </AdminLayout>
   );
 };
 
