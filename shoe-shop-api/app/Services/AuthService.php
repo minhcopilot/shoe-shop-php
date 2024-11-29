@@ -11,7 +11,11 @@ class AuthService
     }
     public function register($params)
     {
-        $user = $this->user->create($params);
+        $user = $this->user->create([
+            'name' => $params->name,
+            'email' => $params->email,
+            'password' => Hash::make($params->password),
+        ]);
 
         // Gửi email xác thực
         $user->sendEmailVerificationNotification();
@@ -27,9 +31,12 @@ class AuthService
 
     public function login($params)
     {
-        $user = $this->user->where('email', $params['email'])->first();
-
-        if (!$user || !Hash::check($params['password'], $user->password)) {
+        $validatedData = $params->validate([
+            'email' => 'required|email',
+            'password' => 'required|string|min:8',
+        ]);
+        $user = User::where('email', $validatedData['email'])->first();
+        if (!$user || !Hash::check($validatedData['password'], $user->password)) {
             return [
                 'message' => 'Email or password is incorrect',
                 'code' => 401,

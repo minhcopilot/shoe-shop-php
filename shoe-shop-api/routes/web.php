@@ -26,51 +26,6 @@ Route::get('/auth/google/redirect', function () {
     return Socialite::driver('google')->redirect();
 });
 
-// Route::get('/auth/google/callback', function () {
-//     $googleUser = Socialite::driver('google')->user();
-
-//     // Kiểm tra xem email đã tồn tại trong cơ sở dữ liệu chưa
-//     $existingUser = User::where('email', $googleUser->email)->first();
-
-//     if ($existingUser) {
-//         // Nếu email đã tồn tại, kiểm tra xem google_id đã được liên kết chưa
-//         if (!$existingUser->google_id) {
-//             // Cập nhật google_id nếu chưa được liên kết
-//             $existingUser->update([
-//                 'google_id' => $googleUser->id,
-//             ]);
-//         }
-
-//         // Trả về token và URL cho frontend
-//         $token = $existingUser->createToken('user')->plainTextToken;
-
-//         return response()->json([
-//             'message' => 'Login successful',
-//             'user' => $existingUser,
-//             'access_token' => $token,
-//             'redirect_url' => '/home', // Thêm URL trang home
-//         ]);
-//     }
-
-//     // Nếu email chưa tồn tại, tạo người dùng mới
-//     $user = User::create([
-//         'google_id' => $googleUser->id,
-//         'name' => $googleUser->name,
-//         'email' => $googleUser->email,
-//         'password' => Hash::make('12345678'),
-//         'email_verified_at' => now(),
-//     ]);
-
-//     $token = $user->createToken('user')->plainTextToken;
-
-//     return response()->json([
-//         'message' => 'Login successful',
-//         'user' => $user,
-//         'access_token' => $token,
-//         'redirect_url' => '/home', // Thêm URL trang home
-//     ]);
-// });
-
 
 Route::get('/auth/google/callback', function () {
     $googleUser = Socialite::driver('google')->user();
@@ -100,7 +55,7 @@ Route::get('/auth/google/callback', function () {
         'google_id' => $googleUser->id,
         'name' => $googleUser->name,
         'email' => $googleUser->email,
-        'password' => Hash::make('12345678'),
+        'password' => bcrypt('12345678'),
         'email_verified_at' => now(),
     ]);
 
