@@ -100,11 +100,16 @@ const routesApp = [
     restricted: true,
   },
 
-  // {
-  // 	path: '/forgot-password',
-  // 	component: <ForgotPassword />,
-  // 	restricted: true,
-  // },
+  {
+  	path: '/forgot-password',
+  	component: ForgotPassword,
+  	restricted: true,
+  },
+  {
+  	path: '/reset-password',
+  	component: ResetPassword,
+  	restricted: true,
+  },
   {
     exact: true,
     path: "/verify-email",
