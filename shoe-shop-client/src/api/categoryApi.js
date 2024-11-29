@@ -3,27 +3,37 @@ import axiosClient from './axiosClient'
 const categoryAPI = {
 	getAllCategory: async (params) => {
 		const url = '/categories'
-		return await axiosClient.get(url, { params })
+		const response = await axiosClient.get(url, { params })
+		
+		return response.data
 	},
 
 	addCategory: async (data) => {
 		const url = '/categories'
-		return await axiosClient.post(url, data)
+		const response = await axiosClient.post(url, data)
+		console.log(response.data)
+		return response.data
 	},
 
 	updateCategory: async (data) => {
-		const url = `/categories/${data._id}`
-		return await axiosClient.put(url, data)
+		const url = `/categories/${data.id}`
+		const response = await axiosClient.put(url, data)
+		console.log(response.data)
+		return response.data
 	},
 
 	getCategory: async (id) => {
 		const url = `/categories/${id}`
-		return await axiosClient.get(url)
+		const response =  await axiosClient.get(url)
+		console.log(response.data)
+		return response.data
 	},
 
 	deleteCategory: async (id) => {
 		const url = `/categories/${id}`
-		return await axiosClient.delete(url)
+		const response =  await axiosClient.delete(url)
+		console.log(response.data)
+		return response.data
 	},
 }
 

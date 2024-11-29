@@ -36,6 +36,7 @@ const User = () => {
       dispatch(action);
     };
     fetchUsers();
+    
   }, []);
 
   // Modal

@@ -1,18 +1,25 @@
-import axiosClient from './axiosClient'
+import axiosClient from './axiosClient';
 
 const uploadAPI = {
-	upload: async (files) => {
-		let formData = new FormData()
-		files.forEach((file) => {
-			formData.append('files', file)
-		})
+  upload: async (files) => {
+    let formData = new FormData();
+    files.forEach((file) => {
+      formData.append('files', file);
+    });
 
-		return await axiosClient.post('/upload', formData, {
-			headers: {
-				'Content-Type': 'multipart/form-data',
-			},
-		})
-	},
-}
+    try {
+      const response = await axiosClient.post('/upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
 
-export default uploadAPI
+      return response.data; // Trả về danh sách các URL hình ảnh đã upload
+    } catch (error) {
+      console.error('Error uploading images:', error);
+      throw error;
+    }
+  },
+};
+
+export default uploadAPI;

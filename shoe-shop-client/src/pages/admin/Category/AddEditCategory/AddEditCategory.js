@@ -29,7 +29,7 @@ const AddEditCategory = ({ open, handleClose, category, handleData }) => {
         setError("");
         reset();
         const newCategory = {
-          _id: res.category._id,
+          id: res.category.id,
           name: res.category.name,
           createdAt: res.createdAt || new Date().toISOString(),
           updatedAt: res.updatedAt || new Date().toISOString(),
@@ -58,11 +58,8 @@ const AddEditCategory = ({ open, handleClose, category, handleData }) => {
       .then((res) => {
         handleClose();
         setError("");
-        const updatedCategory = {
-          ...data,
-          updatedAt: res.updatedAt || new Date().toISOString(),
-        };
-        handleData({ type: "Edit", data: updatedCategory });
+        
+        handleData({ type: "Edit", data: res.data });
         reset();
         toast("Update category successfully!", {
           position: "bottom-center",

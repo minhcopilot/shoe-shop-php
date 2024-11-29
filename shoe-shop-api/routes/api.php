@@ -52,13 +52,14 @@ Route::prefix('categories')->group(function ()  {
 // ->middleware('auth:sanctum')
 //Products
 Route::prefix('products')->group(function () {
-    Route::get('/', [ProductsController::class, 'index']); // Lấy danh sách sản phẩm
-    Route::post('/', [ProductsController::class, 'store']); // Thêm sản phẩm
-    Route::get('/{id}', [ProductsController::class, 'show']); // Xem chi tiết sản phẩm
-    Route::put('/{id}', [ProductsController::class, 'update']); // Cập nhật sản phẩm
-    Route::delete('/{id}', [ProductsController::class, 'destroy']); // Soft delete sản phẩm
-    Route::get('/trashed', [ProductsController::class, 'getTrashed']); // Lấy sản phẩm đã soft delete
-    Route::put('/restore/{id}', [ProductsController::class, 'restore']); // Khôi phục sản phẩm
+    Route::get('/', [ProductsController::class, 'index']);
+    Route::post('/', [ProductsController::class, 'store']);
+    Route::get('/{id}', [ProductsController::class, 'show']);
+    Route::put('/{id}', [ProductsController::class, 'update']);
+    Route::delete('/{id}', [ProductsController::class, 'destroy']);
+    Route::get('/trashed', [ProductsController::class, 'getTrashed']);
+    Route::put('/restore/{id}', [ProductsController::class, 'restore']);
+    Route::post('/upload-images', [ProductsController::class, 'uploadImages']);
 });
 
 //Size

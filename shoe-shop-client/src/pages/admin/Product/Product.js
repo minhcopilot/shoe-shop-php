@@ -32,29 +32,41 @@ const Product = () => {
   const classes = useStyles();
   const dispatch = useDispatch();
   const history = useHistory();
+  
+  // Get products from the Redux store
   const products = useSelector((state) => state.product.products);
   const [prods, setProds] = useState(products);
+  const [filteredProducts, setFilteredProducts] = useState(prods || []);
+  
+  // Fetch products when component mounts
   useEffect(() => {
-    const fetchProducts = () => {
-      const action = getAllProduct();
-      dispatch(action);
+    const fetchProducts = async () => {
+      try {
+        const action = await dispatch(getAllProduct());
+        const result = unwrapResult(action);
+        setProds(result.data);  // Update prods with the fetched data
+        setFilteredProducts(result.data);  // Update filteredProducts
+      } catch (error) {
+        console.log("Failed to fetch products:", error);
+      }
     };
     fetchProducts();
-  }, []);
+  }, [dispatch]);
 
+  // Handle editing a product
   const handleEditProduct = (product) => {
     history.push("/admin/product/new", { state: product });
   };
-  const [filteredProducts, setFilteredProducts] = useState(prods);
+
+  // Handle deleting a product
   const handleDeleteProduct = (id) => {
     const action = deleteProduct(id);
     dispatch(action)
       .then(unwrapResult)
       .then(() => {
-        const newProds = filteredProducts.filter((prod) => prod._id !== id);
+        const newProds = filteredProducts.filter((prod) => prod.id !== id);
         setFilteredProducts(newProds);
-
-        toast("Delete user successfully!", {
+        toast("Delete product successfully!", {
           position: "bottom-center",
           autoClose: 3000,
           hideProgressBar: false,
@@ -67,8 +79,7 @@ const Product = () => {
       });
   };
 
-  // Search
-
+  // Search functionality
   const searchRef = useRef("");
   const handleChangeSearch = (e) => {
     const value = e.target.value;
@@ -80,14 +91,14 @@ const Product = () => {
     searchRef.current = setTimeout(() => {
       if (value === "") setFilteredProducts(prods);
 
-      const filtered = prods.filter((size) => {
-        return size.name.toLowerCase().includes(value.toLowerCase());
-      });
+      const filtered = prods.filter((product) =>
+        product.name.toLowerCase().includes(value.toLowerCase())
+      );
       setFilteredProducts(filtered);
     }, 400);
   };
 
-  // Pagination
+  // Pagination state
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
@@ -99,6 +110,7 @@ const Product = () => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
+
   return (
     <>
       <Helmet>
@@ -112,7 +124,6 @@ const Product = () => {
               placeholder="Tìm kiếm"
               variant="outlined"
               className={classes.searchField}
-              ref={searchRef}
               onChange={handleChangeSearch}
             />
             <IconButton className={classes.searchBtn}>
@@ -130,7 +141,7 @@ const Product = () => {
             <>
               <TableContainer
                 component={Paper}
-                elevation="0"
+                elevation={0}
                 style={{ marginBottom: 25 }}
               >
                 <Table
@@ -162,65 +173,56 @@ const Product = () => {
                   </TableHead>
                   <TableBody>
                     {filteredProducts
-                      .slice(
-                        page * rowsPerPage,
-                        page * rowsPerPage + rowsPerPage
-                      )
-                      .map((product) => {
-                        return (
-                          <TableRow key={product._id}>
-                            <TableCell
-                              component="th"
-                              scope="row"
-                              className={classes.productDesc}
-                              align="center"
-                            >
-                              {product.name}
-                            </TableCell>
-                            <TableCell
-                              align="center"
-                              className={classes.productDesc}
-                            >
-                              {product.desc}
-                            </TableCell>
-                            <TableCell align="center">
-                              {product?.category?.name}
-                            </TableCell>
-                            <TableCell align="center">
-                              {product.price}
-                            </TableCell>
-                            <TableCell align="center">
-                              {product.inStock.toString() === "true"
-                                ? "Có"
-                                : "Không"}
-                            </TableCell>
-                            <TableCell align="center">
-                              <BiPencil
-                                style={{
-                                  cursor: "pointer",
-                                  fontSize: 20,
-                                  marginRight: 20,
-                                }}
-                                onClick={() => {
-                                  handleEditProduct(product);
-                                }}
-                              />
-                              <BiX
-                                style={{ cursor: "pointer", fontSize: 20 }}
-                                onClick={() => {
-                                  handleDeleteProduct(product._id);
-                                }}
-                              />
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
+                      .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                      .map((product) => (
+                        <TableRow key={product.id}>
+                          <TableCell
+                            component="th"
+                            scope="row"
+                            className={classes.productDesc}
+                            align="center"
+                          >
+                            {product.name}
+                          </TableCell>
+                          <TableCell
+                            align="center"
+                            className={classes.productDesc}
+                          >
+                            {product.description}
+                          </TableCell>
+                          <TableCell align="center">
+                            {product?.category?.name || "Chưa có danh mục"}
+                          </TableCell>
+                          <TableCell align="center">{product.price}</TableCell>
+                          <TableCell align="center">
+                            {product.stock > 0 ? "có" : "Không"}
+                          </TableCell>
+                          <TableCell align="center">
+                            <BiPencil
+                              style={{
+                                cursor: "pointer",
+                                fontSize: 20,
+                                marginRight: 20,
+                              }}
+                              onClick={() => {
+                                handleEditProduct(product);
+                              }}
+                            />
+                            <BiX
+                              style={{ cursor: "pointer", fontSize: 20 }}
+                              onClick={() => {
+                                handleDeleteProduct(product.id);
+                              }}
+                            />
+                          </TableCell>
+                        </TableRow>
+                      ))}
                   </TableBody>
                 </Table>
               </TableContainer>
               <TablePagination
                 component="div"
-                count={prods.length}
+                count={filteredProducts.length}
                 rowsPerPageOptions={[10]}
                 page={page}
                 onPageChange={handleChangePage}
@@ -232,7 +234,7 @@ const Product = () => {
             <Box className={classes.emptyContainer}>
               <img
                 src="https://cdn-icons-png.flaticon.com/512/4076/4076432.png"
-                alt=""
+                alt="No Products"
                 className={classes.emptyImg}
               />
               <Typography component="p" className={classes.emptyTitle}>

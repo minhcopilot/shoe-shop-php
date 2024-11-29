@@ -1,4 +1,5 @@
 import axiosClient from './axiosClient'
+import axiosimageClient from './axiosClient'
 
 const productAPI = {
 	getAllProduct: async (params) => {
@@ -8,12 +9,12 @@ const productAPI = {
 
 	addProduct: async (data) => {
 		const url = '/products'
-
-		return await axiosClient.post(url, data)
+		console.log(data)
+		return await axiosimageClient.post(url, data)
 	},
 
 	updateProduct: async (data) => {
-		const url = `/products/${data._id}`
+		const url = `/products/${data.id}`
 		return await axiosClient.put(url, data)
 	},
 

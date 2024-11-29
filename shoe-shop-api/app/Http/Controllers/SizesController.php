@@ -2,8 +2,9 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Http\Resources\SizeResource;
 use App\Services\SizeService;
-
+use App\Classes\ApiResponse;
 class SizesController extends Controller
 {
     protected $sizeService;
@@ -17,7 +18,8 @@ class SizesController extends Controller
     public function index()
     {
         $sizes = $this->sizeService->getAllSizes();
-        return response()->json($sizes);
+        return ApiResponse::sendResponse(SizeResource::collection($sizes),'Size get Successful',201);
+
     }
 
     // POST: /sizes
@@ -28,7 +30,8 @@ class SizesController extends Controller
         ]);
 
         $size = $this->sizeService->createSize($validated);
-        return response()->json($size, 201);
+        return ApiResponse::sendResponse(new SizeResource($size),'Size create successfull', 201);
+
     }
 
     // PUT: /sizes/{id}

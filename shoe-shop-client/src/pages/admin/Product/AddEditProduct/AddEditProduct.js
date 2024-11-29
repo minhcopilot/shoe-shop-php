@@ -18,7 +18,7 @@ import { Controller, useForm } from "react-hook-form";
 import { BiCheckbox, BiCheckboxChecked } from "react-icons/bi";
 import { useDispatch, useSelector } from "react-redux";
 import { Carousel } from "react-responsive-carousel";
-import "react-responsive-carousel/lib/styles/carousel.min.css"; // requires a loader
+import "react-responsive-carousel/lib/styles/carousel.min.css";
 import { useLocation } from "react-router-dom";
 import "react-toastify/dist/ReactToastify.css";
 import { toast, ToastContainer } from "react-toastify";
@@ -43,158 +43,105 @@ const AddEditProduct = () => {
   const sizes = useSelector((state) => state.size.sizes);
   const { register, handleSubmit, reset, control } = useForm();
   const [error, setError] = useState("");
+
   useEffect(() => {
     const fetchData = () => {
-      const action = getAllCategory();
-      dispatch(action);
-
-      const action2 = getAllSize();
-      dispatch(action2);
+      dispatch(getAllCategory());
+      dispatch(getAllSize());
     };
     fetchData();
-  }, []);
+  }, [dispatch]);
 
-  // autocomplete
   const [value, setValue] = useState([]);
-
-  // Handle select multiple images
   const [imagesDisplay, setImagesDisplay] = useState([]);
   const [imagesUpload, setImagesUpload] = useState([]);
 
   useEffect(() => {
     if (location.state) {
-      console.log(location.state.state);
-
+      const { state } = location.state;
       reset({
-        name: location.state.state.name,
-        desc: location.state.state.desc,
-        price: location.state.state.price,
-        images: location.state.state.images,
-        category: location.state.state.category,
-        quantity: location.state.state.quantity,
-        inStock: location.state.state.inStock
-          ? location.state.state.inStock.toString()
-          : "true",
+        name: state.name,
+        desc: state.desc,
+        price: state.price,
+        images: state.images,
+        category_id: state.category.id, // sửa 'category' thành 'category_id'
+        stock: state.stock,
+        inStock: state.inStock ? state.inStock.toString() : "true",
       });
-      setImagesDisplay(() => {
-        if (!location?.state?.state?.images) {
-          return [];
-        }
-        return location.state.state.images.map((image) => image);
-      });
-      setValue(location.state.state.size);
+      setImagesDisplay(state.images || []);
+      setValue(state.size || []);
     }
-  }, [location.state]);
+  }, [location.state, reset]);
 
   const handleOnChangePictures = (e) => {
-    const files = e.target.files;
-    const arrImagesPreview = [];
-    const arrImagesUpload = [];
-
-    Array.from(files)?.forEach((file) => {
-      const image = { preview: URL.createObjectURL(file) };
-      arrImagesPreview.push(image);
-      arrImagesUpload.push(file);
-    });
-    setImagesDisplay(arrImagesPreview);
-    setImagesUpload(arrImagesUpload);
+    const files = Array.from(e.target.files);
+    const previewImages = files.map((file) => ({
+      preview: URL.createObjectURL(file),
+    }));
+    setImagesDisplay(previewImages);
+    setImagesUpload(files);
   };
 
   useEffect(() => {
     return () => {
-      imagesDisplay?.length > 0 &&
-        imagesDisplay.forEach((image) => {
-          URL.revokeObjectURL(image.preview);
-        });
+      imagesDisplay.forEach((image) => URL.revokeObjectURL(image.preview));
     };
   }, [imagesDisplay]);
 
-  // handle product
   const handleAddProduct = (data) => {
-    console.log(data);
-    if (imagesUpload.length === 0) {
-      setError("Images are required");
+    if (!imagesUpload.length || !value.length) {
+      setError(!imagesUpload.length ? "Images are required" : "Sizes are required");
       return;
     }
-
-    if (value.length === 0) {
-      console.log(value);
-      setError("Sizes are required");
-      return;
-    }
-
-    const action = upload(imagesUpload);
-    dispatch(action)
+  
+    // Chuyển đổi dữ liệu về đúng kiểu trước khi gửi
+    const productData = {
+      ...data,
+      price: Number(data.price), // Đảm bảo giá trị là số
+      stock: Number(data.stock), // Đảm bảo số lượng là số
+      category_id: data.category_id, // Đảm bảo category_id đúng
+      size: value.map((size) => size.id), // Chỉ gửi id của size
+      images: imagesUpload.map((image) => image.url || image), // Chỉ gửi URL của ảnh đã upload
+    };
+  
+    console.log(productData); // Kiểm tra dữ liệu
+  
+    dispatch(addProduct(productData))
       .then(unwrapResult)
-      .then((res) => {
-        const product = { ...data, size: sizes, images: res };
-        const action = addProduct(product);
-        dispatch(action)
-          .then(unwrapResult)
-          .then(() => {
-            reset();
-            setImagesUpload([]);
-            setImagesDisplay([]);
-            setError("");
-            setValue([]);
-            toast("Add product successfully!", {
-              position: "bottom-center",
-              autoClose: 500,
-              hideProgressBar: true,
-              closeOnClick: true,
-              pauseOnHover: true,
-              draggable: true,
-              progress: undefined,
-              type: "success",
-            });
-          })
-          .catch((error) => setError("Name has already been taken"));
+      .then(() => {
+        reset();
+        setImagesUpload([]);
+        setImagesDisplay([]);
+        setError("");
+        setValue([]);
+        toast.success("Add product successfully!");
       })
-      .catch((error) => console.log(error));
+      .catch((error) => {
+        console.error(error); // Kiểm tra lỗi trả về từ server
+        setError("Failed to add product");
+      });
   };
 
   const handleEditProduct = (data) => {
-    if (imagesUpload.length === 0) {
-      // Not change images
-      const sizes = value.map((size) => {
-        return size._id;
-      });
-      const product = { ...data, size: sizes, _id: location.state.state._id };
-      const action = updateProduct(product);
-      dispatch(action)
-        .then(unwrapResult)
-        .then(() => {})
-        .catch((error) => setError("Name has already been taken"));
-    } else {
-      const action = upload(imagesUpload);
-      dispatch(action)
-        .then(unwrapResult)
-        .then((res) => {
-          const product = {
-            ...data,
-            size: sizes,
-            _id: location.state.state._id,
-            images: res,
-          };
-          const action = updateProduct(product);
-          dispatch(action)
-            .then(unwrapResult)
-            .then(() => {
-              toast("Update product successfully!", {
-                position: "bottom-center",
-                autoClose: 3000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-                draggable: true,
-                progress: undefined,
-                type: "success",
-              });
-            })
-            .catch((error) => setError("Name has already been taken"));
-        })
-        .catch((error) => console.log(error));
-    }
+    const product = {
+      ...data,
+      size: value.map((size) => size.id), // lấy id từ value của kích thước
+      id: location.state.state.id,
+    };
+
+    const uploadImages = imagesUpload.length
+      ? dispatch(upload(imagesUpload)).then(unwrapResult)
+      : Promise.resolve(location.state.state.images);
+
+    uploadImages
+      .then((images) => {
+        product.images = images; // 'images' là mảng URL đã upload
+        dispatch(updateProduct(product))
+          .then(unwrapResult)
+          .then(() => toast.success("Update product successfully!"))
+          .catch(() => setError("Failed to update product"));
+      })
+      .catch(() => setError("Failed to upload images. Please try again."));
   };
 
   return (
@@ -227,11 +174,7 @@ const AddEditProduct = () => {
                 />
                 <label htmlFor="raised-button-file">
                   Hình ảnh
-                  <Button
-                    variant="raised"
-                    component="span"
-                    className={classes.uploadBtn}
-                  >
+                  <Button variant="raised" component="span" className={classes.uploadBtn}>
                     Tải lên
                   </Button>
                 </label>
@@ -258,103 +201,53 @@ const AddEditProduct = () => {
                 {...register("price")}
                 required
               />
-              <FormControl component="fieldset" className={classes.inStock}>
-                <Typography variant="body1" style={{ marginRight: 20 }}>
-                  Còn hàng:
-                </Typography>
-                <Controller
-                  rules={{ required: true }}
-                  control={control}
-                  defaultValue={location?.state?.inStock?.toString() || "true"}
-                  {...register("inStock")}
-                  required
-                  render={({ field }) => {
-                    const { onBlur, onChange, value } = field;
-                    return (
-                      <RadioGroup style={{ flexDirection: "row" }} {...field}>
-                        <FormControlLabel
-                          value="true"
-                          control={
-                            <Radio
-                              style={{
-                                color: "#1a202c",
-                                "&$checked": {
-                                  color: "#1a202c",
-                                },
-                              }}
-                            />
-                          }
-                          label="Có"
-                        />
-                        <FormControlLabel
-                          value="false"
-                          control={
-                            <Radio
-                              style={{
-                                color: "#1a202c",
-                                "&$checked": {
-                                  color: "#1a202c",
-                                },
-                              }}
-                            />
-                          }
-                          label="Không"
-                        />
-                      </RadioGroup>
-                    );
-                  }}
-                />
-              </FormControl>
+              <TextField
+                label="Stock"
+                type="number"
+                variant="outlined"
+                className={classes.inputGroup}
+                {...register("stock")}
+                required
+              />
               <TextField
                 className={classes.inputGroup}
-                id="select"
                 label="Danh mục"
                 select
                 variant="outlined"
-                {...register("category")}
-                defaultValue={location?.state?.state?.category?._id}
+                {...register("category_id")} // sửa 'category' thành 'category_id'
+                defaultValue={location?.state?.state?.category?.id || ""}
                 required
               >
-                {categories?.map((category) => {
-                  return (
-                    <MenuItem value={category._id} key={category._id}>
-                      {category.name}
-                    </MenuItem>
-                  );
-                })}
+                {categories?.map((category) => (
+                  <MenuItem value={category.id} key={category.id}>
+                    {category.name} {/* Hiển thị tên danh mục */}
+                  </MenuItem>
+                ))}
               </TextField>
-
               <Autocomplete
                 className={classes.inputGroup}
-                id="combo-box-demo"
                 multiple
                 disableCloseOnSelect
                 value={value}
                 options={sizes}
                 getOptionLabel={(option) => option.name}
-                getOptionSelected={(option, value) => value._id === option._id}
                 renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="Kích thước"
-                    variant="outlined"
-                    fullWidth
-                  />
+                  <TextField {...params} label="Kích thước" variant="outlined" fullWidth />
                 )}
                 renderOption={(option, { selected }) => (
                   <>
                     <Checkbox
                       icon={icon}
                       checkedIcon={checkedIcon}
-                      style={{ marginRight: 8 }}
                       checked={selected}
+                      style={{ marginRight: 8 }}
                     />
                     {option.name}
                   </>
                 )}
                 onChange={(_, selectedOptions) => setValue(selectedOptions)}
               />
-              {error !== "" && (
+              {error && (
                 <Typography component="p" className={classes.error}>
                   {error}
                 </Typography>
@@ -369,14 +262,11 @@ const AddEditProduct = () => {
               showStatus={false}
               className={classes.carousel}
             >
-              {imagesDisplay?.length > 0 &&
-                imagesDisplay.map((image) => {
-                  return (
-                    <div>
-                      <img src={image.preview} alt="imageproduct" />
-                    </div>
-                  );
-                })}
+              {imagesDisplay.map((image, index) => (
+                <div key={index}>
+                  <img src={image.preview} alt={`image-${index}`} />
+                </div>
+              ))}
             </Carousel>
           </Box>
         </Box>
@@ -384,14 +274,8 @@ const AddEditProduct = () => {
           position="bottom-center"
           autoClose={3000}
           hideProgressBar={false}
-          newestOnTop={false}
           closeOnClick
-          rtl={false}
-          pauseOnFocusLoss
-          draggable
           pauseOnHover
-          theme="dark"
-          type="default"
         />
       </AdminLayout>
     </>
