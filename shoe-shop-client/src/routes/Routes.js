@@ -114,7 +114,6 @@ const routesApp = [
     exact: true,
     path: "/verify-email",
     component: VerifyEmail,
-    restricted: true,
   },  
   {
     exact: true,

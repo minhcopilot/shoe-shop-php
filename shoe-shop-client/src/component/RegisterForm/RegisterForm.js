@@ -68,13 +68,10 @@ const RegisterForm = () => {
         history.push("/verify-email");
       })
       .catch((error) => {
-        // Hiển thị lỗi khi đăng ký thất bại
-        if (error.errors?.email) {
-          setError(error.errors.email[0]); // Lỗi email đã tồn tại
-        } else {
-          setError(error.message || "Đăng ký thất bại!");
-        }
+        const errorResponse = error.data;
+            setError(errorResponse?.message || "Đăng ký thất bại!");
       })
+    
       .finally(() => {
         setLoading(false); // Đặt loading là false khi API hoàn tất
       });
