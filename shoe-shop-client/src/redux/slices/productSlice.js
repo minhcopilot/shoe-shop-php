@@ -29,17 +29,20 @@ export const getProduct = createAsyncThunk(
 export const addProduct = createAsyncThunk(
 	'product/addProduct',
 	async (data, { rejectWithValue, dispatch }) => {
-		try {
-			const result = await productAPI.addProduct(data)
-
-			dispatch(getAllProduct())
-
-			return result
-		} catch (error) {
-			return rejectWithValue(error.response)
-		}
+	  console.log("Data passed to createAsyncThunk:", data); // Debug
+  
+	  try {
+		const result = await productAPI.addProduct(data);
+		console.log("Data sent to backend:", result);
+		dispatch(getAllProduct());
+		return result;
+	  } catch (error) {
+		console.error("Error in createAsyncThunk:", error.response);
+		return rejectWithValue(error.response);
+	  }
 	}
-)
+  );
+  
 
 export const updateProduct = createAsyncThunk(
 	'product/updateProduct',

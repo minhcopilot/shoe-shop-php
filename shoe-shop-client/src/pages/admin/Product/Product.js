@@ -195,7 +195,7 @@ const Product = () => {
                           </TableCell>
                           <TableCell align="center">{product.price}</TableCell>
                           <TableCell align="center">
-                            {product.stock > 0 ? "có" : "Không"}
+                            {product.stock}
                           </TableCell>
                           <TableCell align="center">
                             <BiPencil

@@ -190,7 +190,7 @@ const AddEditProduct = () => {
                 label="Mô tả"
                 variant="outlined"
                 className={classes.inputGroup}
-                {...register("desc")}
+                {...register("description")}
                 required
               />
               <TextField
@@ -232,7 +232,7 @@ const AddEditProduct = () => {
                 options={sizes}
                 getOptionLabel={(option) => option.name}
                 renderInput={(params) => (
-                  <TextField {...params} label="Kích thước" variant="outlined" fullWidth />
+                  <TextField {...params} label="Kích thước" variant="outlined"  {...register("size")} fullWidth />
                 )}
                 renderOption={(option, { selected }) => (
                   <>
