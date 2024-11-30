@@ -1,4 +1,3 @@
-
 // import React, { useEffect, useRef, useState } from "react";
 // import {
 //   Box,
@@ -190,8 +189,7 @@ import {
   TextField,
   Typography,
 } from "@material-ui/core";
-import { BiPencil, BiSearchAlt2, BiX } from "react-icons/bi";
-import { Helmet } from "react-helmet-async";
+import { BiPencil, BiSearchAlt2 } from "react-icons/bi";
 import AdminLayout from "../../../component/admin/AdminLayout/AdminLayout";
 import AddEditOrder from "./AddEditOrder/AddEditOrder";
 import orderAPI from "../../../api/orderApi";
@@ -218,7 +216,7 @@ const Order = () => {
       }
     };
     fetchOrders();
-  }, [ orders]);
+  }, [orders]);
 
   // Open modal to edit order
   const handleOpen2 = (order) => {
@@ -320,7 +318,8 @@ const Order = () => {
                     {new Date(order.created_at).toLocaleDateString()}
                   </TableCell>
                   <TableCell align="center">
-                    {new Intl.NumberFormat("vi-VN").format(order.total_price)} VND
+                    {new Intl.NumberFormat("vi-VN").format(order.total_price)}{" "}
+                    VND
                   </TableCell>
                   <TableCell align="center">
                     <Typography

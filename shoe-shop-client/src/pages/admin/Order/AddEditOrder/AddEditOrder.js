@@ -10,7 +10,7 @@ import { useStyles } from "./styles";
 
 const AddEditOrder = ({ open, handleClose, order = {}, updateSuccess }) => {
   const classes = useStyles();
-  const { register, handleSubmit, reset } = useForm();
+  const {  reset } = useForm();
   const [error, setError] = useState("");
   const [formData, setFormData] = useState({
     status: order?.status || "", // Khởi tạo trạng thái

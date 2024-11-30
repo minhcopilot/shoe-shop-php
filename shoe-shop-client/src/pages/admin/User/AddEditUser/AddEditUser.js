@@ -6,16 +6,13 @@ import {
   Radio,
   RadioGroup,
   TextField,
-  Typography,
 } from "@material-ui/core";
 import Backdrop from "@material-ui/core/Backdrop";
 import Fade from "@material-ui/core/Fade";
 import Modal from "@material-ui/core/Modal";
-import { unwrapResult } from "@reduxjs/toolkit";
 import React, { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { toast, ToastContainer } from "react-toastify";
-import { signUp } from "../../../../redux/slices/authSlice";
 import { getAllUser } from "../../../../redux/slices/userSlice";
 import { useStyles } from "./styles";
 import userAPI from "../../../../api/userApi";
@@ -44,7 +41,7 @@ const AddEditUser = ({ open, handleClose, user, handleData }) => {
 
     try {
       // Gọi API để tạo người dùng mới
-      const result = await userAPI.addUser(user);
+       await userAPI.addUser(user);
 
       // Sau khi thành công, đóng modal, reset form và thông báo cho người dùng
       handleClose();
@@ -80,7 +77,7 @@ const AddEditUser = ({ open, handleClose, user, handleData }) => {
     };
 
     try {
-      const result = await userAPI.updateUser(newUser);
+       await userAPI.updateUser(newUser);
 
       handleClose();
       setValue("false"); // Reset lại trạng thái của radio button

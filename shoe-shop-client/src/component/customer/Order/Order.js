@@ -18,7 +18,6 @@ import {
 import { Helmet } from "react-helmet-async";
 import CustomerLayout from "../CustomerLayout/CustomerLayout";
 import { useStyles } from "./styles";
-import { Grid } from "@material-ui/core";  // Import Grid từ Material-UI
 import orderAPI from "../../../api/orderApi";
 import CloseIcon from '@material-ui/icons/Close';
 
