@@ -175,7 +175,7 @@ const UserChat = () => {
     });
 
     return () => {
-      if (subscription) {
+      if (typeof subscription === 'function') {
         subscription();
       }
     };

@@ -226,62 +226,58 @@ const AdminChatList = () => {
 
   useEffect(() => {
     const subscription = subscribeToChatChannel((message) => {
-      // Cập nhật messages
-      setMessages((prev) => {
-        const chatId =
-          message.sender_id === admin.id
-            ? message.receiver_id
-            : message.sender_id;
+      // Chỉ xử lý tin nhắn từ user, không xử lý tin nhắn từ admin
+      if (message.sender_id !== admin.id) {
+        setMessages((prev) => {
+          const chatId = message.sender_id;
 
-        // Kiểm tra xem tin nhắn đã tồn tại chưa
-        const messageExists = prev[chatId]?.some(
-          (msg) =>
-            msg.id === message.id ||
-            (msg.text === message.content &&
-              Math.abs(new Date(msg.timestamp) - new Date(message.created_at)) <
-                1000)
-        );
+          // Kiểm tra tin nhắn trùng lặp
+          const isDuplicate = prev[chatId]?.some(
+            (msg) =>
+              msg.id === message.id ||
+              (msg.text === message.content &&
+                Math.abs(
+                  new Date(msg.timestamp) - new Date(message.created_at)
+                ) < 1000)
+          );
 
-        // Nếu tin nhắn đã tồn tại, không thêm vào nữa
-        if (messageExists) {
-          return prev;
-        }
+          if (isDuplicate) {
+            return prev;
+          }
 
-        return {
-          ...prev,
-          [chatId]: [
-            ...(prev[chatId] || []),
-            {
-              id: message.id,
-              text: message.content,
-              sender: message.sender_id === admin.id ? "admin" : "user",
-              timestamp: new Date(message.created_at),
-            },
-          ].sort((a, b) => a.timestamp - b.timestamp),
-        };
-      });
+          return {
+            ...prev,
+            [chatId]: [
+              ...(prev[chatId] || []),
+              {
+                id: message.id,
+                text: message.content,
+                sender: "user",
+                timestamp: new Date(message.created_at),
+              },
+            ].sort((a, b) => a.timestamp - b.timestamp),
+          };
+        });
 
-      // Cập nhật danh sách chat
-      setChats((prev) => {
-        const chatIndex = prev.findIndex(
-          (chat) =>
-            chat.id ===
-            (message.sender_id === admin.id
-              ? message.receiver_id
-              : message.sender_id)
-        );
+        // Cập nhật danh sách chat
+        setChats((prev) => {
+          const chatIndex = prev.findIndex(
+            (chat) => chat.id === message.sender_id
+          );
 
-        if (chatIndex === -1) return prev;
+          if (chatIndex === -1) return prev;
 
-        const updatedChats = [...prev];
-        updatedChats[chatIndex] = {
-          ...updatedChats[chatIndex],
-          lastMessage: message.content,
-          timestamp: new Date().toLocaleTimeString(),
-        };
+          const updatedChats = [...prev];
+          updatedChats[chatIndex] = {
+            ...updatedChats[chatIndex],
+            lastMessage: message.content,
+            timestamp: new Date().toLocaleTimeString(),
+            unread: true,
+          };
 
-        return updatedChats;
-      });
+          return updatedChats;
+        });
+      }
     });
 
     return () => {
