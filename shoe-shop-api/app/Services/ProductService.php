@@ -16,7 +16,7 @@ class ProductService
             $query->where('name', 'like', '%' . $search . '%');
         }
 
-        return $query->paginate(10);
+        return $query->paginate(100);
     }
 
     public function createProduct($data)

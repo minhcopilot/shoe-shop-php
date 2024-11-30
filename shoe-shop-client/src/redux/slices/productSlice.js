@@ -96,7 +96,7 @@ const productSlice = createSlice({
 		[getAllProduct.fulfilled]: (state, action) => {
 			state.productsLoading = false
 			console.log(action.payload);
-			state.products = action.payload
+			state.products = action.payload || action.payload.data
 		},
 		[getProduct.pending]: (state) => {
 			state.productLoading = true

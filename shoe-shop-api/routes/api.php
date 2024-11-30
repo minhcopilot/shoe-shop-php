@@ -40,7 +40,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 //category
-Route::prefix('categories')->group(function ()  {
+Route::prefix('categories')->middleware('auth:sanctum')->group(function ()  {
     Route::get('', [CategoryController::class, 'index']);
     Route::post('', [CategoryController::class, 'store']);
     Route::get('/{category}', [CategoryController::class, 'show']);

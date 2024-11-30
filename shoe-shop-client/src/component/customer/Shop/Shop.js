@@ -39,13 +39,14 @@ const Shop = () => {
   const categories = useSelector((state) => state.category.categories);
   const productsLoading = useSelector((state) => state.product.productsLoading);
 
-  useEffect(() => {
-    const fetchCategories = () => {
-      const action = getAllCategory();
-      dispatch(action);
-    };
+  const fetchCategories = async () => {
+    await dispatch(getAllCategory());
+  };
+  console.log("Products test: ", products);
+  useEffect(() => { 
     fetchCategories();
   }, []);
+  console.log("Categories: ", categories);
 
   const handleNavigate = (id) => {
     history.push(`/product/${id}`);
@@ -59,7 +60,7 @@ const Shop = () => {
     sortBy: searchParams.get("sortBy") || null,
     category: searchParams.get("category") || null,
     page: parseInt(searchParams.get("page")) || 1,
-    limit: 12,
+    limit: 10,
   });
 
   // Change page pagination
@@ -151,12 +152,15 @@ const Shop = () => {
       dispatch(action)
         .then(unwrapResult)
         .then((res) => {
+          console.log("API Response:", res);
           setFilter({
             ...filter,
             count: res.pages,
             page: res.page,
           });
         });
+        
+        console.log("Products fetched: ", products);
     };
 
     fetchProducts();
@@ -200,7 +204,8 @@ const Shop = () => {
           alignItems="center"
           className={classes.lastestProducts}
         >
-          {products.length > 0 && (
+          {products && (
+            
             <Box className={classes.filter}>
               <Typography component="h3" className={classes.heading}>
                 Tất cả sản phẩm
@@ -235,7 +240,7 @@ const Shop = () => {
                 >
                   {categories?.map((category) => {
                     return (
-                      <MenuItem value={category._id} key={category.name}>
+                      <MenuItem value={category.id} key={category.name}>
                         {category.name}
                       </MenuItem>
                     );
@@ -248,8 +253,9 @@ const Shop = () => {
           {!productsLoading ? (
             <>
               <Grid item container className={classes.list}>
-                {products.length > 0 ? (
-                  products.map((product) => (
+                {products.data.length > 0 ? (
+
+                  products.data.map((product) => (
                     <Grid
                       item
                       xl={3}
@@ -261,7 +267,7 @@ const Shop = () => {
                       <Card
                         className={classes.root}
                         onClick={() => {
-                          handleNavigate(product._id);
+                          handleNavigate(product.id);
                         }}
                       >
                         <CardActionArea
@@ -271,10 +277,10 @@ const Shop = () => {
                           <>
                             <CardMedia
                               className={classes.media}
-                              image={product.images[0].preview}
+                              image={product.images[0]}
                               title={product.name}
                             />
-                            {!product.inStock && (
+                            {!product.stock && (
                               <Typography
                                 component="p"
                                 className={classes.watermark}
@@ -311,7 +317,9 @@ const Shop = () => {
                     </Grid>
                   ))
                 ) : (
+                  console.log('count', products.length),
                   <Typography component="p" className={classes.empty}>
+                    
                     Không tìm thấy sản phẩm
                   </Typography>
                 )}

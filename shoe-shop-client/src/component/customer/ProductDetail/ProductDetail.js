@@ -27,31 +27,37 @@ const ProductDetail = () => {
 	const dispatch = useDispatch()
 	const { id } = useParams()
 	const user = useSelector((state) => state.auth.user)
-	const product = useSelector((state) => state.product.product)
+	const product = useSelector((state) => state.product.products)
 	const productLoading = useSelector((state) => state.product.productLoading)
 
 	useEffect(() => {
 		window.scrollTo(0, 0)
 	}, [])
-
+	console.log('pr', product)
+	
 	useEffect(() => {
-		const fetchProduct = () => {
-			const action = getProduct(id?.toString())
-			dispatch(action)
-		}
-		fetchProduct()
-	}, [])
-
+		const fetchProduct = async () => {
+		  try {
+			const action = getProduct(id);
+			await dispatch(action).unwrap();
+		  } catch (error) {
+			console.error('Error fetching product:', error);
+		  }
+		};
+		fetchProduct();
+	  }, [id, dispatch]);
+	  useEffect(() => {
+		console.log('Fetched product:', product); // In ra dữ liệu product khi nhận được
+	  }, [product]);
 	const [quantity, setQuantity] = useState(1)
 	const handleIncreaseQuantity = () => {
-		if (!product.inStock) return
-
-		if (quantity > product.quantity) return
+		if (!product?.data?.stock) return;
+		if (quantity > product.data.quantity) return
 		else setQuantity(quantity + 1)
 	}
 
 	const handleDecreaseQuantity = () => {
-		if (!product.inStock) return
+		if (!product.data.stock) return
 
 		if (quantity <= 1) return
 		else setQuantity(quantity - 1)
@@ -60,14 +66,14 @@ const ProductDetail = () => {
 	const [indexSize, setIndexSize] = useState()
 	const [size, setSize] = useState()
 	const handleChangeSize = (index, size) => {
-		if (!product.inStock) return
+		if (!product.data.stock) return
 		setIndexSize(index)
-		setSize(size)
+		setSize({ id: size.id, name: size.name });
 	}
 
 	const handleAddToCart = () => {
 		// Sold out
-		if (!product.inStock) return
+		if (!product.data.stock) return
 
 		// Empty size
 		if (indexSize === undefined) {
@@ -101,8 +107,8 @@ const ProductDetail = () => {
 
 		const existedProduct = user?.cart.find((productInCart) => {
 			return (
-				productInCart.product._id === product._id &&
-				productInCart.chooseSize._id === size._id
+				productInCart.product.id === product.data.id &&
+				productInCart.chooseSize.id === size.data.id
 			)
 		})
 
@@ -113,16 +119,16 @@ const ProductDetail = () => {
 			}
 
 			const newProducts = user.cart.filter((product) => {
-				console.log(size?._id, product?.chooseSize?._id)
+				console.log(size?.id, product?.chooseSize?.id)
 				return (
-					product.product._id !== existedProduct.product._id ||
-					(product?.product?._id === existedProduct?.product?._id &&
-						product?.chooseSize?._id !== size?._id)
+					product.product.id !== existedProduct.product.id ||
+					(product?.product?.id === existedProduct?.product?.id &&
+						product?.chooseSize?.id !== size?.id)
 				)
 			})
 
 			const action = updateUser({
-				_id: user._id,
+				id: user.id,
 				cart: [...newProducts, newProduct],
 			})
 			dispatch(action)
@@ -143,7 +149,7 @@ const ProductDetail = () => {
 		} else {
 			const productData = { product, quantity, chooseSize: size }
 			const action = updateUser({
-				_id: user?._id,
+				id: user?.id,
 				cart: [...user?.cart, productData],
 			})
 			dispatch(action)
@@ -169,10 +175,13 @@ const ProductDetail = () => {
 				<title>Reno - Product</title>
 				<meta name="description" content="Helmet application" />
 			</Helmet>
+			
 			<CustomerLayout>
 				<Box className={classes.detail}>
 					<>
+					
 						{!productLoading ? (
+							
 							<>
 								<Box className={classes.imgContainer}>
 									<Carousel
@@ -180,27 +189,29 @@ const ProductDetail = () => {
 										showArrows={false}
 										showStatus={false}
 									>
-										{product?.images?.map((image) => (
-											<Box style={{ position: 'relative' }}>
-												<img src={image.preview} alt="product" />
-												{!product.inStock && (
-													<Typography
-														component="p"
-														className={classes.watermark}
-													>
-														Sold out
+										{product.data ? (
+											product.data.map((images) => (
+												<Box key={images.id} style={{ position: 'relative' }}>
+												<img src={images.preview} alt="product" />
+												{!product.data.stock && (
+													<Typography component="p" className={classes.watermark}>
+													Sold out
 													</Typography>
 												)}
-											</Box>
-										))}
+												</Box>
+											))
+											) : (
+											<Typography>No images available</Typography>
+											)}
 									</Carousel>
 								</Box>
 								<Box className={classes.content}>
 									<Typography component="h3" className={classes.heading}>
-										{product.name}
+										
+										{product.data.name}
 									</Typography>
 									<Typography component="subtitle1" className={classes.price}>
-										{new Intl.NumberFormat('vi-VN').format(product.price)} VND
+										{new Intl.NumberFormat('vi-VN').format(product.data.price)} VND
 									</Typography>
 									<Rating
 										readOnly
@@ -210,16 +221,16 @@ const ProductDetail = () => {
 									/>
 									<Divider style={{ margin: '20px 0' }} />
 									<Typography component="p" className={classes.desc}>
-										{product.desc}
+										{product.data.description}
 									</Typography>
 									<Box className={classes.sizeContainer}>
 										<Typography component="p" style={{ marginRight: 20 }}>
 											Size
 										</Typography>
-										{product?.size?.map((size, index) => (
+										{product?.data?.size?.map((size, index) => (
 											<Box
 												className={`${
-													product.inStock ? classes.size : classes.sizeDisabled
+													product.data.stock ? classes.size : classes.sizeDisabled
 												}
 												${indexSize === index && classes.activeSize}
 												`}
@@ -252,13 +263,12 @@ const ProductDetail = () => {
 											/>
 										</Box>
 										<Button
-											disableRipple={!product.inStock && true}
-											className={
-												product.inStock ? classes.add : classes.addDisabled
-											}
-											onClick={handleAddToCart}
+										disableRipple={!product?.data?.stock}
+										className={product?.data?.stock ? classes.add : classes.addDisabled}
+										onClick={handleAddToCart}
+										disabled={!product?.data?.stock}
 										>
-											Add to Cart
+										Add to Cart
 										</Button>
 									</Box>
 								</Box>
