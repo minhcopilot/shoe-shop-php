@@ -130,6 +130,23 @@ const Order = () => {
         return "grey"; // Default color for other statuses
     }
   };
+  const handleDeleteOrder = async (orderId) => {
+    if (window.confirm("Bạn có chắc chắn muốn xóa đơn hàng này?")) {
+      try {
+        // Gọi API xóa đơn hàng
+        const response = await orderAPI.deleteOrder(orderId);
+        // Kiểm tra kết quả và cập nhật danh sách đơn hàng nếu thành công
+        setOrders((prevOrders) =>
+          prevOrders.filter((order) => order.id !== orderId)
+        );
+        alert("Đơn hàng đã được xóa thành công.");
+      } catch (error) {
+        console.error("Error deleting order:", error);
+        alert("Không thể xóa đơn hàng. Vui lòng thử lại sau.");
+      }
+    }
+  };
+  
 
   useEffect(() => {
     fetchOrders();
@@ -235,6 +252,19 @@ const Order = () => {
                             Huỷ
                           </Button>
                         </>
+                      )}
+
+                      {order.status === "Huỷ" && (
+                        <Button
+                          variant="contained"
+                          style={{
+                            backgroundColor: "red",
+                            color: "#fff",
+                          }}
+                          onClick={() => handleDeleteOrder(order.id)}
+                        >
+                          Xóa
+                        </Button>
                       )}
                     </TableCell>
                   </TableRow>
@@ -464,7 +494,7 @@ const Order = () => {
                     {/* Ảnh sản phẩm */}
                     <Box style={{ flex: 1, display: "flex", justifyContent: "center" }}>
                       <img
-                        src={item.image} // Giả sử đây là đường dẫn ảnh
+                        src={item.images} // Giả sử đây là đường dẫn ảnh
                         alt={item.product_name}
                         style={{
                           width: "80px", // Giới hạn kích thước ảnh

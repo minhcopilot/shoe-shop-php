@@ -180,7 +180,7 @@ class OrderController extends Controller
             $item->product_name = $item->product->name;   // Thêm tên sản phẩm vào OrderItem
             $item->size_name = $item->size->name;          // Thêm tên kích thước vào OrderItem
             $item->price = $item->product->price;          // Thêm giá sản phẩm vào OrderItem
-            $item->image = $item->product->image;          // Thêm ảnh sản phẩm vào OrderItem
+            $item->image = $item->product->images;          // Thêm ảnh sản phẩm vào OrderItem
             $item->quantity = $item->quantity;
             $item->sdt = $item->sdt;
             return $item;
