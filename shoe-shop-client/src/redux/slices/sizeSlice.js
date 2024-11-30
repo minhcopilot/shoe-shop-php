@@ -81,11 +81,34 @@ const sizeSlice = createSlice({
 	reducers: {},
 	extraReducers: {
 		[getAllSize.pending]: (state) => {
-			state.sizesLoading = true
+			state.categoriesLoading = true
 		},
 		[getAllSize.fulfilled]: (state, action) => {
-			state.sizesLoading = false
-			state.sizes = action.payload.sizes
+			state.sizesLoading = false;
+			const data = action.payload?.data;
+			if (Array.isArray(data)) {
+			  state.sizes = data.map((size) => ({
+				...size,
+				createdAt: new Date(size.created_at).toISOString(),
+				updatedAt: new Date(size.updated_at).toISOString(),
+			  }));
+			} else {
+			  state.sizes = [];
+			}
+		  },
+		[addSize.fulfilled]: (state, action) => {
+			state.categoriesLoading = false
+			state.categories = action.payload
+		},
+		[updateSize.fulfilled]: (state, action) => {
+			console.log(action.payload)
+			state.categoriesLoading = false
+			state.categories = action.payload
+		},
+		[deleteSize.fulfilled]: (state, action) => {
+			console.log(action.payload)
+			state.categoriesLoading = false
+			state.categories = action.payload
 		},
 	},
 })

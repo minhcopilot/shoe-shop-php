@@ -113,7 +113,6 @@ const AddEditUser = ({ open, handleClose, user, handleData }) => {
       setValue(user.is_admin.toString());
     }
   }, [user]);
-
   return (
     <>
       <Modal

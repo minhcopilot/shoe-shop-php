@@ -39,23 +39,29 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 //category
 Route::prefix('categories')->group(function () {
     Route::get('', [CategoryController::class, 'index']);
-    Route::post('', [CategoryController::class, 'store']);
     Route::get('/{category}', [CategoryController::class, 'show']);
-    Route::put('/{category}', [CategoryController::class, 'update']);
-    Route::delete('/{category}', [CategoryController::class, 'destroy']);
-    Route::get('/trashed/all', [CategoryController::class, 'getTrashed']);
-    Route::put('/restore/{id}', [CategoryController::class, 'restore']);
+    
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::post('', [CategoryController::class, 'store']);
+        Route::put('/{category}', [CategoryController::class, 'update']);
+        Route::delete('/{category}', [CategoryController::class, 'destroy']);
+        Route::get('/trashed/all', [CategoryController::class, 'getTrashed']);
+        Route::put('/restore/{id}', [CategoryController::class, 'restore']);
+    });
 });
-// ->middleware('auth:sanctum')
 //Products
 Route::prefix('products')->group(function () {
-    Route::get('/', [ProductsController::class, 'index']); // Lấy danh sách sản phẩm
-    Route::post('/', [ProductsController::class, 'store']); // Thêm sản phẩm
-    Route::get('/{id}', [ProductsController::class, 'show']); // Xem chi tiết sản phẩm
-    Route::put('/{id}', [ProductsController::class, 'update']); // Cập nhật sản phẩm
-    Route::delete('/{id}', [ProductsController::class, 'destroy']); // Soft delete sản phẩm
-    Route::get('/trashed', [ProductsController::class, 'getTrashed']); // Lấy sản phẩm đã soft delete
-    Route::put('/restore/{id}', [ProductsController::class, 'restore']); // Khôi phục sản phẩm
+    Route::get('/', [ProductsController::class, 'index']);
+    Route::get('/{id}', [ProductsController::class, 'show']);
+    
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::post('/', [ProductsController::class, 'store']);
+        Route::put('/{id}', [ProductsController::class, 'update']);
+        Route::delete('/{id}', [ProductsController::class, 'destroy']);
+        Route::get('/trashed', [ProductsController::class, 'getTrashed']);
+        Route::put('/restore/{id}', [ProductsController::class, 'restore']);
+        Route::post('/upload-images', [ProductsController::class, 'uploadImages']);
+    });
 });
 
 //Size

@@ -36,7 +36,7 @@ export const updateUser = createAsyncThunk(
     try {
       const result = await userAPI.updateUser(data);
 
-      dispatch(getUser(data._id));
+      dispatch(getUser(data.id));
 
       return result;
     } catch (error) {

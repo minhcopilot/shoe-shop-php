@@ -9,7 +9,6 @@ import { toast, ToastContainer } from "react-toastify";
 import {
   addSize,
   updateSize,
-  getAllSize,
 } from "../../../../redux/slices/sizeSlice";
 import { useStyles } from "./styles";
 import { unwrapResult } from "@reduxjs/toolkit";
@@ -26,7 +25,7 @@ const AddEditSize = ({ open, handleClose, size, handleData }) => {
       .then((res) => {
         handleClose();
         reset();
-        handleData({ type: "Add", data: res.size });
+        handleData({ type: "Add", data: res });
         toast("Thêm kích thước thành công!", {
           position: "bottom-center",
           autoClose: 3000,
@@ -51,7 +50,7 @@ const AddEditSize = ({ open, handleClose, size, handleData }) => {
         handleClose();
         setError("");
         reset();
-        handleData({ type: "Edit", data: res.size });
+        handleData({ type: "Edit", data: res });
         toast("Cập nhật kích thước thành công!", {
           position: "bottom-center",
           autoClose: 3000,
@@ -70,7 +69,7 @@ const AddEditSize = ({ open, handleClose, size, handleData }) => {
 
   useEffect(() => {
     reset(size);
-  }, [size]);
+  }, [size,reset]);
   return (
     <>
       <Modal

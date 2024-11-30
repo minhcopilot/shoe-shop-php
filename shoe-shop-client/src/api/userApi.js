@@ -1,4 +1,4 @@
-import axiosClient from './axiosClient'
+import axiosClient from "./axiosClient";
 
 const userAPI = {
 	getAllUser: async (params) => {
@@ -15,30 +15,31 @@ const userAPI = {
 		return await axiosClient.post(url, data)
 	},
 
-	updateUser: async (data) => {
-		const url = `/users/${data._id}`
-		return await axiosClient.put(url, data)
-	},
 
-	getUser: async (id) => {
-		const url = `/users/${id}`
-		return await axiosClient.get(url)
-	},
+  updateUser: async (data) => {
+    const url = `/users/${data.id}`;
+    return await axiosClient.put(url, data);
+  },
 
-	deleteUser: async (id) => {
-		const url = `/users/${id}`
-		return await axiosClient.delete(url)
-	},
+  getUser: async (id) => {
+    const url = `/users/${id}`;
+    return await axiosClient.get(url);
+  },
 
-	// forgotPassword: async (email) => {
-	// 	const url = '/users/forgot-password'
-	// 	return await axiosClient.post(url, { email })
-	// },
+  deleteUser: async (id) => {
+    const url = `/users/${id}`;
+    return await axiosClient.delete(url);
+  },
 
-	// resetPassword: async (id, token) => {
-	// 	const url = `/users/password-reset/:${id}/:${token}`
-	// 	return await axiosClient.post(url)
-	// },
-}
+  // forgotPassword: async (email) => {
+  // 	const url = '/users/forgot-password'
+  // 	return await axiosClient.post(url, { email })
+  // },
 
-export default userAPI
+  // resetPassword: async (id, token) => {
+  // 	const url = `/users/password-reset/:${id}/:${token}`
+  // 	return await axiosClient.post(url)
+  // },
+};
+
+export default userAPI;

@@ -218,7 +218,7 @@ const Order = () => {
       }
     };
     fetchOrders();
-  }, []);
+  }, [ orders]);
 
   // Open modal to edit order
   const handleOpen2 = (order) => {

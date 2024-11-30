@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\Api\Product\UpdateRequest;
+use App\Http\Requests\Api\Product\ProductRequest;
+
 use App\Http\Resources\ProductResource;
 use App\Services\ProductService;
 use App\Models\Product;

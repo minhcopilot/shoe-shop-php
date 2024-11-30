@@ -19,10 +19,12 @@ import { Helmet } from "react-helmet-async";
 import { BiPencil, BiSearchAlt2, BiX } from "react-icons/bi";
 import { useDispatch, useSelector } from "react-redux";
 import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import AdminLayout from "../../../component/admin/AdminLayout/AdminLayout";
 import { deleteSize, getAllSize } from "../../../redux/slices/sizeSlice";
 import AddEditSize from "./AddEditSize/AddEditSize";
 import { useStyles } from "./styles";
+import dayjs from "dayjs";
 
 const Size = () => {
   const classes = useStyles();
@@ -54,14 +56,16 @@ const Size = () => {
       dispatch(action)
         .then(unwrapResult)
         .then((res) => {
-          setFilteredSizes(res.sizes);
+          console.log("Sizes fetched:", res);
+          setFilteredSizes(res.data);
         })
         .catch((error) => {
-          console.log(error);
+          console.error("Failed to fetch sizes:", error);
         });
     };
     fetchSizes();
-  }, []);
+  }, [dispatch]);
+  
 
   const handleDeleteSize = (id) => {
     const action = deleteSize(id);
@@ -71,22 +75,22 @@ const Size = () => {
         onHandleData({ type: "Delete", data: { id: id } });
         toast("Xóa kích thước thành công!", {
           position: "bottom-center",
-          autoClose: 3000,
+          autoClose: 3000, // Thời gian 3 giây
           hideProgressBar: false,
           closeOnClick: true,
           pauseOnHover: true,
           draggable: true,
-          progress: undefined,
           type: "success",
         });
       })
       .catch((error) => {
         console.log(error);
       });
+      
   };
 
   // Search
-  const [filteredSizes, setFilteredSizes] = useState(sizes);
+  const [filteredSizes, setFilteredSizes] = useState(sizes || []);
   const searchRef = useRef("");
   const handleChangeSearch = (e) => {
     const value = e.target.value;
@@ -123,13 +127,13 @@ const Size = () => {
       case "Edit":
         setFilteredSizes((prev) =>
           prev.map((item) =>
-            item._id === data.data._id ? { ...item, ...data.data } : item
+            item.id === data.data.id ? { ...item, ...data.data } : item
           )
         );
         break;
       case "Delete":
         setFilteredSizes((prev) =>
-          prev.filter((item) => item._id !== data.data.id)
+          prev.filter((item) => item.id !== data.data.id)
         );
         break;
       case "Add":
@@ -197,7 +201,7 @@ const Size = () => {
                     {filteredSizes.length > 0 &&
                       filteredSizes.map((size) => {
                         return (
-                          <TableRow key={size._id}>
+                          <TableRow key={size.id}>
                             <TableCell
                               component="th"
                               scope="row"
@@ -209,11 +213,10 @@ const Size = () => {
                               </Typography>
                             </TableCell>
                             <TableCell align="center">
-                              {new Date(size.createdAt).toLocaleString()}
+                              {dayjs(size.createdAt).format("DD/MM/YYYY HH:mm:ss")}
                             </TableCell>
-
                             <TableCell align="center">
-                              {new Date(size.updatedAt).toLocaleString()}
+                              {dayjs(size.updatedAt).format("DD/MM/YYYY HH:mm:ss")}
                             </TableCell>
                             <TableCell align="center">
                               <BiPencil
@@ -227,7 +230,7 @@ const Size = () => {
                               <BiX
                                 style={{ cursor: "pointer", fontSize: 20 }}
                                 onClick={() => {
-                                  handleDeleteSize(size._id);
+                                  handleDeleteSize(size.id);
                                 }}
                               />
                             </TableCell>

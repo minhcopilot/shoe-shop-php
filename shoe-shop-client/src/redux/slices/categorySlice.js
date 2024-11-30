@@ -84,8 +84,26 @@ const categorySlice = createSlice({
 			state.categoriesLoading = true
 		},
 		[getAllCategory.fulfilled]: (state, action) => {
+			state.categoriesLoading = false;
+			state.categories = action.payload.map((category) => ({
+			  ...category,
+			  createdAt: category.created_at,
+			  updatedAt: category.updated_at,
+			}));
+		  },
+		[addCategory.fulfilled]: (state, action) => {
 			state.categoriesLoading = false
-			state.categories = action.payload.categories
+			state.categories = action.payload
+		},
+		[updateCategory.fulfilled]: (state, action) => {
+			console.log(action.payload)
+			state.categoriesLoading = false
+			state.categories = action.payload
+		},
+		[deleteCategory.fulfilled]: (state, action) => {
+			console.log(action.payload)
+			state.categoriesLoading = false
+			state.categories = action.payload
 		},
 	},
 })

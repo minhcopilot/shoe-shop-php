@@ -87,10 +87,10 @@ class CategoryController extends Controller
     {
         try {
             $result = $this->categoryService->delete($id);
-
+            $categories = $this->categoryService->getAll();
             if ($result) {
                 return ApiResponse::sendResponse(
-                    [],
+                    [$categories],
                     'Category deleted successfully!',
                     200
                 );

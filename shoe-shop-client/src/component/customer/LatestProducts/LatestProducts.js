@@ -18,16 +18,18 @@ const LatestProducts = () => {
   const classes = useStyles();
   const dispatch = useDispatch();
   const history = useHistory();
-  const products = useSelector((state) => state.product.products);
+  const products = useSelector((state) => {
+    return state.product.products;
+  });
   useEffect(() => {
     const fetchProducts = () => {
-      const params = "limit=8";
+      const params = "";
       const action = getAllProduct(params);
       dispatch(action);
     };
 
     fetchProducts();
-  }, []);
+  }, [dispatch]);
 
   const handleNavigate = (id) => {
     history.push(`/product/${id}`);
@@ -57,13 +59,13 @@ const LatestProducts = () => {
             <Card
               className={classes.root}
               onClick={() => {
-                handleNavigate(product._id);
+                handleNavigate(product.id);
               }}
             >
               <CardActionArea className={classes.cardArea}>
                 <CardMedia
                   className={classes.media}
-                  image={product.images[0].preview}
+                  image={product.images[0]}
                   title={product.name}
                 />
                 <CardContent className={classes.content}>
@@ -79,7 +81,7 @@ const LatestProducts = () => {
                   </Box>
                   <Box className={classes.bottomTitle}>
                     <Typography variant="body2" component="p">
-                      {new Intl.NumberFormat('vi-VN').format(product.price)} VND
+                      {new Intl.NumberFormat("vi-VN").format(product.price)} VND
                     </Typography>
                     <Rating
                       readOnly

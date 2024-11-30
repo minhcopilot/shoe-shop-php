@@ -22,7 +22,7 @@ class ProductRequest extends FormRequest
             'sizes' => 'nullable|array',
             'sizes.*' => 'exists:sizes,id',
             'images' => 'nullable|array',
-            'images.*' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            
         ];
     }
 }

@@ -24,21 +24,36 @@ import {
 } from "../../../redux/slices/categorySlice";
 import "react-toastify/dist/ReactToastify.css";
 import AddEditCategory from "./AddEditCategory/AddEditCategory";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
 import { useStyles } from "./styles";
 import { unwrapResult } from "@reduxjs/toolkit";
 
 const Category = () => {
   const classes = useStyles();
-  const categories = useSelector((state) => state.category.categories);
+  const categories  = useSelector((state) => state.category.categories);
+  
   const dispatch = useDispatch();
+  
   const fetchCategories = () => {
     const action = getAllCategory();
+
     dispatch(action);
   };
-  useEffect(() => {
+
+
+  useEffect(() => { 
     fetchCategories();
-  }, []);
+  });
+
+
+  useEffect(() => {
+    setFilteredCategories(categories);
+  }, [categories]);
+
+
+  
+
+
 
   // Modal
   const [open, setOpen] = useState(false);
@@ -59,18 +74,17 @@ const Category = () => {
     setOpen2(false);
   };
   const onHandleData = (data) => {
+    console.log(data)
     switch (data.type) {
       case "Edit":
         setFilteredCategories((prev) =>
           prev.map((item) =>
-            item._id === data.data._id
-              ? { ...item, name: data.data.name, updatedAt: data.data.updatedAt }
-              : item
+            item.id === data.data.id ? { ...item, ...data.data } : item
           )
         );
         break;
       case "Delete":
-        setFilteredCategories((prev) => prev.filter((item) => item._id !== data.data.id));
+        setFilteredCategories((prev) => prev.filter((item) => item.id !== data.data.id));
         break;
       case "Add":
         setFilteredCategories((prev) => [...prev, data.data]);
@@ -100,7 +114,7 @@ const Category = () => {
   };
 
   // Search
-  const [filteredCategories, setFilteredCategories] = useState(categories);
+  const [filteredCategories, setFilteredCategories] = useState(categories|| []);
   const searchRef = useRef("");
   const handleChangeSearch = (e) => {
     const value = e.target.value;
@@ -220,7 +234,7 @@ const Category = () => {
                             <BiX
                               style={{ cursor: "pointer", fontSize: 20 }}
                               onClick={() => {
-                                handleDeleteCategory(category._id);
+                                handleDeleteCategory(category.id);
                               }}
                             />
                           </TableCell>
@@ -255,6 +269,7 @@ const Category = () => {
               />
               <Typography component="p" className={classes.emptyTitle}>
                 Không có dữ liệu
+                
               </Typography>
             </Box>
           )}
@@ -272,6 +287,8 @@ const Category = () => {
 					theme="dark"
 					type="default"
 				/> */}
+
+       
       </AdminLayout>
     </>
   );
