@@ -33,6 +33,7 @@ const Header = () => {
 
   const classes = useStyles();
   const user = useSelector((state) => state.auth.user);
+  const cartItems = useSelector((state) => state.cart.items);
 
   const [open, setOpen] = useState(false);
 
@@ -175,7 +176,7 @@ const Header = () => {
             >
               <BiCartAlt className={classes.cart} />
               <Typography component="p" className={classes.cartQuantity}>
-                {user?.cart?.length || 0}
+                {cartItems?.length || 0}
               </Typography>
             </IconButton>
             {user && Object.keys(user).length > 0 ? (

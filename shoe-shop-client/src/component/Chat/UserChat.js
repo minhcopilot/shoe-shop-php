@@ -1,8 +1,7 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Box,
   TextField,
-  Button,
   Typography,
   Paper,
   IconButton,
@@ -11,7 +10,7 @@ import { makeStyles } from "@material-ui/core/styles";
 import { BiSend } from "react-icons/bi";
 import { IoMdChatboxes } from "react-icons/io";
 import { useDispatch, useSelector } from "react-redux";
-import { subscribeToChatChannel, disconnectPusher } from "../../hook/pusher";
+import { subscribeToChatChannel } from "../../hook/pusher";
 import MessageSkeleton from "./MessageSkeleton";
 import {
   setMessages,
@@ -268,12 +267,6 @@ const UserChat = () => {
         console.error("Error sending message:", error);
         dispatch(removeMessage(tempMessage));
       }
-    }
-  };
-
-  const handleKeyPress = (e) => {
-    if (e.key === "Enter") {
-      handleSendMessage();
     }
   };
 

@@ -88,7 +88,7 @@ const AddEditUser = ({ open, handleClose, user, handleData }) => {
       fullName: data.fullName,
       email: data.email,
       isAdmin: value,
-      _id: user._id,
+      id: user.id,
     };
 
     const action = updateUser(newUser);
@@ -126,7 +126,7 @@ const AddEditUser = ({ open, handleClose, user, handleData }) => {
       });
       setValue(user.isAdmin.toString());
     }
-  }, [user]);
+  }, [user,reset]);
   return (
     <>
       <Modal

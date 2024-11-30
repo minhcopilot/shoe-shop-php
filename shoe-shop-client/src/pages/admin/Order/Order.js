@@ -1,6 +1,5 @@
 import {
   Box,
-  Button,
   IconButton,
   Paper,
   Table,
@@ -24,7 +23,7 @@ import { useStyles } from "./styles";
 const Order = () => {
   const classes = useStyles();
   const a = useSelector((state) => state.order.orders);
-  const [orders, setOders] = useState(a);
+  const [orders] = useState(a);
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -33,8 +32,7 @@ const Order = () => {
       dispatch(action);
     };
     fetchOrders();
-    console.log(orders);
-  }, []);
+  }, [dispatch, orders]);
 
   // Modal
   const [open2, setOpen2] = useState(false);
@@ -72,7 +70,7 @@ const Order = () => {
   };
   const handleUpdate = (data) => {
     const updatedOrders = orders.map((order) =>
-      order._id === data.newOrder._id ? data.newOrder : order
+      order.id === data.newOrder.id ? data.newOrder : order
     );
     console.log(orders, data.newOrder, updatedOrders);
 
@@ -137,7 +135,7 @@ const Order = () => {
                       className={classes.cellProduct}
                       align="center"
                     >
-                      <Typography component="span">{order._id}</Typography>
+                      <Typography component="span">{order.id}</Typography>
                     </TableCell>
                     <TableCell align="center">
                       {new Date(order.createdAt).toLocaleString()}
@@ -158,7 +156,7 @@ const Order = () => {
                       <BiX
                         style={{ cursor: "pointer", fontSize: 20 }}
                         onClick={() => {
-                          handleDeleteOrder(order._id);
+                          handleDeleteOrder(order.id);
                         }}
                       />
                     </TableCell>

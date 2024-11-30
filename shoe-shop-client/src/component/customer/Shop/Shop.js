@@ -12,7 +12,6 @@ import {
 } from "@material-ui/core";
 import Pagination from "@material-ui/lab/Pagination";
 import Rating from "@material-ui/lab/Rating";
-import { unwrapResult } from "@reduxjs/toolkit";
 import queryString from "query-string";
 import React, { useEffect, useRef, useState } from "react";
 import { Helmet } from "react-helmet-async";
@@ -20,10 +19,10 @@ import { useDispatch, useSelector } from "react-redux";
 import { useHistory, useLocation } from "react-router-dom";
 import RingLoader from "react-spinners/RingLoader";
 import { getAllCategory } from "../../../redux/slices/categorySlice";
-import { getAllProduct } from "../../../redux/slices/productSlice";
+// import { getAllProduct } from "../../../redux/slices/productSlice";
 import CustomerLayout from "../CustomerLayout/CustomerLayout";
 import { useStyles } from "./styles";
-
+// import { unwrapResult } from "@reduxjs/toolkit";
 const override = css`
   display: block;
   margin: 0 auto;
@@ -45,7 +44,7 @@ const Shop = () => {
       dispatch(action);
     };
     fetchCategories();
-  }, []);
+  }, [dispatch]);
 
   const handleNavigate = (id) => {
     history.push(`/product/${id}`);
@@ -136,56 +135,58 @@ const Shop = () => {
       });
   };
 
-  useEffect(() => {
-    const fetchProducts = () => {
-      const params = queryString.stringify({
-        // ...filter,
-        limit: filter.limit,
-        page: filter.page,
-        category: filter.category,
-        order: filter.order,
-        sortBy: filter.sortBy,
-        search: searchParams.get("search") || null,
-      });
-      const action = getAllProduct(params);
-      dispatch(action)
-        .then(unwrapResult)
-        .then((res) => {
-          setFilter({
-            ...filter,
-            count: res.pages,
-            page: res.page,
-          });
-        });
-    };
+  // useEffect(() => {
+  //   const fetchProducts = () => {
+  //     const params = queryString.stringify({
+  //       // ...filter,
+  //       limit: filter.limit,
+  //       page: filter.page,
+  //       category: filter.category,
+  //       order: filter.order,
+  //       sortBy: filter.sortBy,
+  //       search: searchParams.get("search") || null,
+  //     });
+  //     const action = getAllProduct(params);
+  //     dispatch(action)
+  //       .then(unwrapResult)
+  //       .then((res) => {
+  //         setFilter({
+  //           ...filter,
+  //           count: res.pages,
+  //           page: res.page,
+  //         });
+  //       });
+  //   };
 
-    fetchProducts();
-  }, [
-    filter.page,
-    dispatch,
-    filter.limit,
-    filter.category,
-    filter.order,
-    filter.sortBy,
-  ]);
+  //   fetchProducts();
+  // }, [
+  //   filter.page,
+  //   dispatch,
+  //   filter,
+  //   searchParams.get("search"),
+  //   filter.limit,
+  //   filter.category,
+  //   filter.order,
+  //   filter.sortBy,
+  // ]);
 
-  useEffect(() => {
-    if (searchParams.get("search")) {
-      if (searchParams.get("search") !== filter.search) {
-        setFilter({
-          ...filter,
-          category: null,
-          order: null,
-          sortBy: null,
-          search: searchParams.get("search"),
-        });
-      }
-    }
-  }, [searchParams.get("search")]);
+  // useEffect(() => {
+  //   if (searchParams.get("search")) {
+  //     if (searchParams.get("search") !== filter.search) {
+  //       setFilter({
+  //         ...filter,
+  //         category: null,
+  //         order: null,
+  //         sortBy: null,
+  //         search: searchParams.get("search"),
+  //       });
+  //     }
+  //   }
+  // }, [searchParams.get("search"), filter, searchParams]);
 
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [filter.page]);
+  // useEffect(() => {
+  //   window.scrollTo(0, 0);
+  // }, [filter.page]);
 
   return (
     <>
@@ -235,7 +236,7 @@ const Shop = () => {
                 >
                   {categories?.map((category) => {
                     return (
-                      <MenuItem value={category._id} key={category.name}>
+                      <MenuItem value={category.id} key={category.name}>
                         {category.name}
                       </MenuItem>
                     );
@@ -261,7 +262,7 @@ const Shop = () => {
                       <Card
                         className={classes.root}
                         onClick={() => {
-                          handleNavigate(product._id);
+                          handleNavigate(product.id);
                         }}
                       >
                         <CardActionArea
@@ -271,10 +272,10 @@ const Shop = () => {
                           <>
                             <CardMedia
                               className={classes.media}
-                              image={product.images[0].preview}
+                              image={product.images[0]}
                               title={product.name}
                             />
-                            {!product.inStock && (
+                            {product.stock === 0 && (
                               <Typography
                                 component="p"
                                 className={classes.watermark}
@@ -296,7 +297,10 @@ const Shop = () => {
                             </Box>
                             <Box className={classes.bottomTitle}>
                               <Typography variant="body2" component="p">
-                                {new Intl.NumberFormat('vi-VN').format(product.price)} VND
+                                {new Intl.NumberFormat("vi-VN").format(
+                                  product.price
+                                )}{" "}
+                                VND
                               </Typography>
                               <Rating
                                 readOnly

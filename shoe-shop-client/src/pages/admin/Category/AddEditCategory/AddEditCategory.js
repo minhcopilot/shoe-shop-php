@@ -79,7 +79,7 @@ const AddEditCategory = ({ open, handleClose, category, handleData }) => {
 
   useEffect(() => {
     reset(category);
-  }, [category]);
+  }, [category,reset]);
   return (
     <>
       <Modal

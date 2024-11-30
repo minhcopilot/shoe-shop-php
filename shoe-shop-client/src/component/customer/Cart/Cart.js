@@ -18,18 +18,22 @@ import { Helmet } from "react-helmet-async";
 import { BiMinus, BiPlus, BiRightArrowAlt, BiX } from "react-icons/bi";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useHistory } from "react-router-dom";
-import StripeCheckout from "react-stripe-checkout";
 import bgCart from "../../../assets/images/cart.svg";
-import { payment, updateUser } from "../../../redux/slices/authSlice";
+import { updateUser } from "../../../redux/slices/authSlice";
 import { addOrder } from "../../../redux/slices/orderSlice";
+import {
+  removeFromCart,
+  updateQuantity,
+} from "../../../redux/slices/cartSlice";
 import CustomerLayout from "../CustomerLayout/CustomerLayout";
 import { useStyles } from "./styles";
 
-const KEY = process.env.REACT_APP_STRIPE_KEY;
+// const KEY = process.env.REACT_APP_STRIPE_KEY;
 
 const Cart = () => {
   const classes = useStyles();
   const user = useSelector((state) => state.auth.user);
+  const cartItems = useSelector((state) => state.cart.items);
   const dispatch = useDispatch();
   const history = useHistory();
 
@@ -38,135 +42,87 @@ const Cart = () => {
   }, []);
 
   const handleIncreaseQuantity = (product) => {
-    const thisProductInCart = user.cart.find((productInCart) => {
-      return productInCart.product.id === product._id;
-    });
-    const newProduct = {
-      ...thisProductInCart,
-      quantity: thisProductInCart.quantity + 1,
-    };
-
-    const filteredProducts = user.cart.filter((productInCart) => {
-      return (
-        productInCart.product.id !== product._id ||
-        (productInCart.product.id === product._id &&
-          productInCart.chooseSize !== product.chooseSize)
-      );
-    });
-
-    const action = updateUser({
-      _id: user._id,
-      cart: [...filteredProducts, newProduct],
-    });
-    dispatch(action);
+    dispatch(
+      updateQuantity({
+        productId: product.product.id,
+        sizeId: product.chooseSize.id,
+        quantity: product.quantity + 1,
+      })
+    );
   };
 
   const handleDecreaseQuantity = (product) => {
     if (product.quantity - 1 === 0) {
-      const filteredProducts = user.cart.filter((productInCart) => {
-        return (
-          productInCart.product.id !== product._id ||
-          (productInCart.product.id === product._id &&
-            productInCart.chooseSize !== product.chooseSize)
-        );
-      });
-
-      const action = updateUser({
-        _id: user._id,
-        cart: filteredProducts,
-      });
-      dispatch(action);
+      dispatch(
+        removeFromCart({
+          productId: product.product.id,
+          sizeId: product.chooseSize.id,
+        })
+      );
     } else {
-      const thisProductInCart = user.cart.find((productInCart) => {
-        return productInCart.product.id === product._id;
-      });
-
-      const newProduct = {
-        ...thisProductInCart,
-        quantity: thisProductInCart.quantity - 1,
-      };
-
-      const filteredProducts = user.cart.filter((productInCart) => {
-        return (
-          productInCart.product.id !== product._id ||
-          (productInCart.product.id === product._id &&
-            productInCart.chooseSize !== product.chooseSize)
-        );
-      });
-
-      const cloneProducts = user.cart;
-      // cloneProducts.splice()
-
-      const action = updateUser({
-        _id: user._id,
-        cart: [...filteredProducts, newProduct],
-      });
-      dispatch(action);
+      dispatch(
+        updateQuantity({
+          productId: product.product.id,
+          sizeId: product.chooseSize.id,
+          quantity: product.quantity - 1,
+        })
+      );
     }
   };
 
   const handleDeleteProduct = (product) => {
-    const filteredProducts = user.cart.filter((productInCart) => {
-      return (
-        productInCart.product._id !== product.product._id ||
-        (productInCart.chooseSize._id !== product.chooseSize._id &&
-          productInCart.product._id === product.product._id)
-      );
-    });
-
-    console.log(filteredProducts);
-
-    const action = updateUser({
-      _id: user._id,
-      cart: filteredProducts,
-    });
-    dispatch(action);
+    dispatch(
+      removeFromCart({
+        productId: product.product.id,
+        sizeId: product.chooseSize.id,
+      })
+    );
   };
 
-  const total = user?.cart?.reduce((sum, price) => {
-    return sum + price.product.price * price.quantity;
+  const total = cartItems?.reduce((sum, item) => {
+    return sum + item.product.price * item.quantity;
   }, 0);
 
-  const onToken = (token) => {
-    console.log(token);
-    const action = payment({
-      tokenId: token.id,
-      amount: total * 100,
-    });
-    dispatch(action)
-      .then(unwrapResult)
-      .then((res) => {
-        const action = addOrder({
-          userId: user._id,
-          orderItems: user.cart,
-          paymentMethod: "Card",
-          totalPrice: total,
-          address: token.card.name,
-        });
-        dispatch(action);
-        const action2 = updateUser({
-          _id: user._id,
-          cart: [],
-        });
-        dispatch(action2)
-          .then(unwrapResult)
-          .then((res) => {
-            history.push("/order");
-          });
-      })
-      .catch((error) => console.log(error));
-  };
+  // const onToken = (token) => {
+  //   console.log(token);
+  //   const action = payment({
+  //     tokenId: token.id,
+  //     amount: total * 100,
+  //   });
+  //   dispatch(action)
+  //     .then(unwrapResult)
+  //     .then((res) => {
+  //       const action = addOrder({
+  //         userId: user.id,
+  //         orderItems: cartItems,
+  //         paymentMethod: "Card",
+  //         totalPrice: total,
+  //         address: token.card.name,
+  //       });
+  //       dispatch(action);
+  //       const action2 = updateUser({
+  //         id: user.id,
+  //         cart: [],
+  //       });
+  //       dispatch(action2)
+  //         .then(unwrapResult)
+  //         .then((res) => {
+  //           history.push("/order");
+  //         });
+  //     })
+  //     .catch((error) => console.log(error));
+  // };
   const handleOder = () => {
     const action = addOrder({
-      userId: user._id,
-      orderItems: user.cart,
+      userId: user.id,
+      orderItems: cartItems,
       paymentMethod: "Card",
       totalPrice: total,
       address: "hsadsdasdasd",
     });
     dispatch(action);
     const action2 = updateUser({
-      _id: user._id,
+      id: user.id,
       cart: [],
     });
     dispatch(action2)
@@ -182,7 +138,7 @@ const Cart = () => {
         <meta name="description" content="Helmet application" />
       </Helmet>
       <CustomerLayout>
-        {user?.cart?.length > 0 ? (
+        {cartItems?.length > 0 ? (
           <Box className={classes.list}>
             <Typography component="h3" className={classes.headingCart}>
               Giỏ hàng
@@ -216,7 +172,7 @@ const Cart = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {user.cart.map((product) => (
+                  {cartItems.map((product) => (
                     <TableRow key={nanoid()} className={classes.tableROw}>
                       <TableCell
                         component="th"
@@ -225,7 +181,7 @@ const Cart = () => {
                         style={{ justifyContent: "flex-start" }}
                       >
                         <img
-                          src={product.product.images[0].preview}
+                          src={product.product.images[0]}
                           alt="product"
                           className={classes.imgProduct}
                         />
@@ -237,7 +193,10 @@ const Cart = () => {
                         {product.chooseSize.name}
                       </TableCell>
                       <TableCell align="center">
-                        {new Intl.NumberFormat('vi-VN').format(product.product.price)} VND
+                        {new Intl.NumberFormat("vi-VN").format(
+                          product.product.price
+                        )}{" "}
+                        VND
                       </TableCell>
                       <TableCell align="center">
                         <Box className={classes.quantity}>
@@ -257,7 +216,10 @@ const Cart = () => {
                         </Box>
                       </TableCell>
                       <TableCell align="center">
-                        {new Intl.NumberFormat('vi-VN').format(product.quantity * product.product.price)} VND
+                        {new Intl.NumberFormat("vi-VN").format(
+                          product.quantity * product.product.price
+                        )}{" "}
+                        VND
                       </TableCell>
                       <TableCell align="center">
                         <BiX
@@ -275,7 +237,9 @@ const Cart = () => {
                 Tiếp tục mua sắm
               </Button>
               <Box className={classes.checkout}>
-                <Typography>Tổng: {new Intl.NumberFormat('vi-VN').format(total)} VND</Typography>
+                <Typography>
+                  Tổng: {new Intl.NumberFormat("vi-VN").format(total)} VND
+                </Typography>
 
                 {/* <StripeCheckout
                   token={onToken}

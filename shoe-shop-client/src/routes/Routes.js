@@ -17,14 +17,14 @@ const AddEditProductAdmin = lazy(() =>
 const OrderAdmin = lazy(() => import("../pages/admin/Order/Order"));
 // Customer pages
 const Home = lazy(() => import("../pages/customer/Home/Home"));
-const ForgotPassword = lazy(() =>
-  import("../pages/ForgotPassword/ForgotPassword")
-);
+// const ForgotPassword = lazy(() =>
+//   import("../pages/ForgotPassword/ForgotPassword")
+// );
 const Login = lazy(() => import("../pages/Login/Login"));
 const Register = lazy(() => import("../pages/Register/Register"));
-const ResetPassword = lazy(() =>
-  import("../pages/ResetPassword/ResetPassword")
-);
+// const ResetPassword = lazy(() =>
+//   import("../pages/ResetPassword/ResetPassword")
+// );
 const Cart = lazy(() => import("../component/customer/Cart/Cart"));
 const Order = lazy(() => import("../component/customer/Order/Order"));
 const ProductDetail = lazy(() =>

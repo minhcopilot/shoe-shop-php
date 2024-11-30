@@ -9,7 +9,6 @@ import { toast, ToastContainer } from "react-toastify";
 import {
   addSize,
   updateSize,
-  getAllSize,
 } from "../../../../redux/slices/sizeSlice";
 import { useStyles } from "./styles";
 import { unwrapResult } from "@reduxjs/toolkit";
@@ -70,7 +69,7 @@ const AddEditSize = ({ open, handleClose, size, handleData }) => {
 
   useEffect(() => {
     reset(size);
-  }, [size]);
+  }, [size,reset]);
   return (
     <>
       <Modal

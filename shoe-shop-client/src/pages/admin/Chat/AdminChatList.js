@@ -4,7 +4,6 @@ import {
   Typography,
   List,
   ListItem,
-  ListItemText,
   Paper,
   Avatar,
   InputBase,
@@ -16,7 +15,7 @@ import { Helmet } from "react-helmet-async";
 import SearchIcon from "@material-ui/icons/Search";
 import SendIcon from "@material-ui/icons/Send";
 import { useSelector } from "react-redux";
-import { subscribeToChatChannel, disconnectPusher } from "../../../hook/pusher";
+import { subscribeToChatChannel } from "../../../hook/pusher";
 import MessageSkeleton from "../../../component/Chat/MessageSkeleton";
 import ChatListSkeleton from "../../../component/Chat/ChatListSkeleton";
 
@@ -219,7 +218,7 @@ const AdminChatList = () => {
   const [selectedChat, setSelectedChat] = useState(null);
   const [newMessage, setNewMessage] = useState("");
   const [messages, setMessages] = useState({});
-  const [onlineUsers, setOnlineUsers] = useState(new Set());
+  const [onlineUsers] = useState(new Set());
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingChats, setIsLoadingChats] = useState(true);
   const messageContainerRef = useRef(null);

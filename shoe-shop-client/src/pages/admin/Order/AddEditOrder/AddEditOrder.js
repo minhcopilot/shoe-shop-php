@@ -18,7 +18,7 @@ const AddEditOrder = ({ open, handleClose, order, updateSuccess }) => {
 
   const handleEditOrder = (data) => {
     const action = updateOrder({
-      id: order._id,
+      id: order.id,
       status: data.status,
     });
     dispatch(action)
@@ -50,7 +50,7 @@ const AddEditOrder = ({ open, handleClose, order, updateSuccess }) => {
       reset({
         status: order.status.toString(),
       });
-  }, [order]);
+  }, [order, reset]);
   return (
     <>
       <Modal

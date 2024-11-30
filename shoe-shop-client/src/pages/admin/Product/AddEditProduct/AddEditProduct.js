@@ -2,19 +2,15 @@ import {
   Box,
   Button,
   Checkbox,
-  FormControl,
-  FormControlLabel,
   MenuItem,
-  Radio,
-  RadioGroup,
-  TextField,
   Typography,
+  TextField,
 } from "@material-ui/core";
 import Autocomplete from "@material-ui/lab/Autocomplete";
 import { unwrapResult } from "@reduxjs/toolkit";
 import React, { useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
-import { Controller, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { BiCheckbox, BiCheckboxChecked } from "react-icons/bi";
 import { useDispatch, useSelector } from "react-redux";
 import { Carousel } from "react-responsive-carousel";
@@ -41,7 +37,7 @@ const AddEditProduct = () => {
   const location = useLocation();
   const categories = useSelector((state) => state.category.categories);
   const sizes = useSelector((state) => state.size.sizes);
-  const { register, handleSubmit, reset, control } = useForm();
+  const { register, handleSubmit, reset } = useForm();
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -90,10 +86,12 @@ const AddEditProduct = () => {
 
   const handleAddProduct = (data) => {
     if (!imagesUpload.length || !value.length) {
-      setError(!imagesUpload.length ? "Images are required" : "Sizes are required");
+      setError(
+        !imagesUpload.length ? "Images are required" : "Sizes are required"
+      );
       return;
     }
-  
+
     // Chuyển đổi dữ liệu về đúng kiểu trước khi gửi
     const productData = {
       ...data,
@@ -103,9 +101,9 @@ const AddEditProduct = () => {
       size: value.map((size) => size.id), // Chỉ gửi id của size
       images: imagesUpload.map((image) => image.url || image), // Chỉ gửi URL của ảnh đã upload
     };
-  
+
     console.log(productData); // Kiểm tra dữ liệu
-  
+
     dispatch(addProduct(productData))
       .then(unwrapResult)
       .then(() => {
@@ -174,7 +172,11 @@ const AddEditProduct = () => {
                 />
                 <label htmlFor="raised-button-file">
                   Hình ảnh
-                  <Button variant="raised" component="span" className={classes.uploadBtn}>
+                  <Button
+                    variant="raised"
+                    component="span"
+                    className={classes.uploadBtn}
+                  >
                     Tải lên
                   </Button>
                 </label>
@@ -232,7 +234,13 @@ const AddEditProduct = () => {
                 options={sizes}
                 getOptionLabel={(option) => option.name}
                 renderInput={(params) => (
-                  <TextField {...params} label="Kích thước" variant="outlined"  {...register("size")} fullWidth />
+                  <TextField
+                    {...params}
+                    label="Kích thước"
+                    variant="outlined"
+                    {...register("size")}
+                    fullWidth
+                  />
                 )}
                 renderOption={(option, { selected }) => (
                   <>

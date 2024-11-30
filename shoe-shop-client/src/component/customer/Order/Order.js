@@ -23,16 +23,10 @@ const Order = () => {
   const user = useSelector((state) => state.auth.user);
 
   const [orders, setOrders] = useState([]);
-  const [value, setValue] = useState("");
-
-  const handleRadioChange = (event) => {
-    setValue(event.target.value);
-    // setError(false);
-  };
 
   useEffect(() => {
     const fetchOrder = () => {
-      const action = getAllOrder(user._id);
+      const action = getAllOrder(user.id);
       dispatch(action)
         .then(unwrapResult)
         .then((res) => {
@@ -40,7 +34,7 @@ const Order = () => {
         });
     };
     fetchOrder();
-  }, []);
+  }, [dispatch, user.id]);
   return (
     <>
       <Helmet>
@@ -97,7 +91,7 @@ const Order = () => {
                         className={classes.cellProduct}
                         align="center"
                       >
-                        <Typography component="body2">{order._id}</Typography>
+                        <Typography component="body2">{order.id}</Typography>
                       </TableCell>
                       <TableCell align="center">
                         {new Date(order.createdAt).toLocaleString()}

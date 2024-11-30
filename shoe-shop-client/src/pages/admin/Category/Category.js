@@ -24,7 +24,7 @@ import {
 } from "../../../redux/slices/categorySlice";
 import "react-toastify/dist/ReactToastify.css";
 import AddEditCategory from "./AddEditCategory/AddEditCategory";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
 import { useStyles } from "./styles";
 import { unwrapResult } from "@reduxjs/toolkit";
 
@@ -36,14 +36,14 @@ const Category = () => {
   
   const fetchCategories = () => {
     const action = getAllCategory();
-    console.log(action);
+
     dispatch(action);
   };
 
 
   useEffect(() => { 
     fetchCategories();
-  }, []);
+  });
 
 
   useEffect(() => {
