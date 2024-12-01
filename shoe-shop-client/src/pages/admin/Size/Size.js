@@ -11,6 +11,7 @@ import {
   TableRow,
   TextField,
   Typography,
+  CircularProgress,
 } from "@material-ui/core";
 import TablePagination from "@material-ui/core/TablePagination";
 import { unwrapResult } from "@reduxjs/toolkit";
@@ -65,28 +66,34 @@ const Size = () => {
     };
     fetchSizes();
   }, [dispatch]);
-  
+
+  const [deletingId, setDeletingId] = useState(null);
 
   const handleDeleteSize = (id) => {
+    setDeletingId(id);
     const action = deleteSize(id);
     dispatch(action)
-      .then(unwrapResult)
+      .unwrap()
       .then(() => {
         onHandleData({ type: "Delete", data: { id: id } });
-        toast("Xóa kích thước thành công!", {
+        toast.success("Xóa kích thước thành công!", {
           position: "bottom-center",
-          autoClose: 3000, // Thời gian 3 giây
+          autoClose: 3000,
           hideProgressBar: false,
           closeOnClick: true,
           pauseOnHover: true,
           draggable: true,
-          type: "success",
         });
       })
       .catch((error) => {
-        console.log(error);
+        toast.error("Có lỗi xảy ra khi xóa kích thước!", {
+          position: "bottom-center",
+          autoClose: 3000,
+        });
+      })
+      .finally(() => {
+        setDeletingId(null);
       });
-      
   };
 
   // Search
@@ -213,10 +220,14 @@ const Size = () => {
                               </Typography>
                             </TableCell>
                             <TableCell align="center">
-                              {dayjs(size.createdAt).format("DD/MM/YYYY HH:mm:ss")}
+                              {dayjs(size.created_at).format(
+                                "DD/MM/YYYY HH:mm:ss"
+                              )}
                             </TableCell>
                             <TableCell align="center">
-                              {dayjs(size.updatedAt).format("DD/MM/YYYY HH:mm:ss")}
+                              {dayjs(size.updated_at).format(
+                                "DD/MM/YYYY HH:mm:ss"
+                              )}
                             </TableCell>
                             <TableCell align="center">
                               <BiPencil
@@ -227,12 +238,16 @@ const Size = () => {
                                 }}
                                 onClick={() => handleOpen2(size)}
                               />
-                              <BiX
-                                style={{ cursor: "pointer", fontSize: 20 }}
-                                onClick={() => {
-                                  handleDeleteSize(size.id);
-                                }}
-                              />
+                              {deletingId === size.id ? (
+                                <CircularProgress size={20} />
+                              ) : (
+                                <BiX
+                                  style={{ cursor: "pointer", fontSize: 20 }}
+                                  onClick={() => {
+                                    handleDeleteSize(size.id);
+                                  }}
+                                />
+                              )}
                             </TableCell>
                           </TableRow>
                         );

@@ -11,6 +11,7 @@ import {
   TableRow,
   TextField,
   Typography,
+  CircularProgress,
 } from "@material-ui/core";
 import TablePagination from "@material-ui/core/TablePagination";
 import React, { useEffect, useRef, useState } from "react";
@@ -27,33 +28,30 @@ import AddEditCategory from "./AddEditCategory/AddEditCategory";
 import { toast } from "react-toastify";
 import { useStyles } from "./styles";
 import { unwrapResult } from "@reduxjs/toolkit";
+import { ToastContainer } from "react-toastify";
 
 const Category = () => {
   const classes = useStyles();
-  const categories  = useSelector((state) => state.category.categories);
-  
+  const { categories, categoriesLoading } = useSelector(
+    (state) => state.category
+  );
   const dispatch = useDispatch();
-  
-  const fetchCategories = () => {
-    const action = getAllCategory();
+  const [filteredCategories, setFilteredCategories] = useState([]);
 
-    dispatch(action);
-  };
+  // Effect để fetch categories khi component mount
+  useEffect(() => {
+    dispatch(getAllCategory())
+      .unwrap()
+      .catch((error) => {
+        console.error("Failed to fetch categories:", error);
+        toast.error("Failed to load categories");
+      });
+  }, [dispatch]);
 
-
-  useEffect(() => { 
-    fetchCategories();
-  });
-
-
+  // Effect để update filteredCategories khi categories thay đổi
   useEffect(() => {
     setFilteredCategories(categories);
   }, [categories]);
-
-
-  
-
-
 
   // Modal
   const [open, setOpen] = useState(false);
@@ -74,17 +72,24 @@ const Category = () => {
     setOpen2(false);
   };
   const onHandleData = (data) => {
-    console.log(data)
     switch (data.type) {
       case "Edit":
         setFilteredCategories((prev) =>
           prev.map((item) =>
-            item.id === data.data.id ? { ...item, ...data.data } : item
+            item.id === data.data.id
+              ? {
+                  ...item,
+                  name: data.data.name,
+                  updatedAt: data.data.updatedAt,
+                }
+              : item
           )
         );
         break;
       case "Delete":
-        setFilteredCategories((prev) => prev.filter((item) => item.id !== data.data.id));
+        setFilteredCategories((prev) =>
+          prev.filter((item) => item.id !== data.data.id)
+        );
         break;
       case "Add":
         setFilteredCategories((prev) => [...prev, data.data]);
@@ -93,8 +98,13 @@ const Category = () => {
         setFilteredCategories(categories);
     }
   };
-  
+
+  // Thêm state để quản lý loading khi delete
+  const [deletingId, setDeletingId] = useState(null);
+
+  // Cập nhật hàm handleDeleteCategory
   const handleDeleteCategory = (id) => {
+    setDeletingId(id); // Set loading state
     const action = deleteCategory(id);
     dispatch(action)
       .then(unwrapResult)
@@ -110,11 +120,13 @@ const Category = () => {
           progress: undefined,
           type: "success",
         });
+      })
+      .finally(() => {
+        setDeletingId(null); // Clear loading state
       });
   };
 
   // Search
-  const [filteredCategories, setFilteredCategories] = useState(categories|| []);
   const searchRef = useRef("");
   const handleChangeSearch = (e) => {
     const value = e.target.value;
@@ -215,10 +227,10 @@ const Category = () => {
                             </Typography>
                           </TableCell>
                           <TableCell align="center">
-                            {new Date(category.createdAt).toLocaleString()}
+                            {new Date(category.created_at).toLocaleString()}
                           </TableCell>
                           <TableCell align="center">
-                            {new Date(category.updatedAt).toLocaleString()}
+                            {new Date(category.updated_at).toLocaleString()}
                           </TableCell>
                           <TableCell align="center">
                             <BiPencil
@@ -231,12 +243,16 @@ const Category = () => {
                                 handleOpen2(category);
                               }}
                             />
-                            <BiX
-                              style={{ cursor: "pointer", fontSize: 20 }}
-                              onClick={() => {
-                                handleDeleteCategory(category.id);
-                              }}
-                            />
+                            {deletingId === category.id ? (
+                              <CircularProgress />
+                            ) : (
+                              <BiX
+                                style={{ cursor: "pointer", fontSize: 20 }}
+                                onClick={() => {
+                                  handleDeleteCategory(category.id);
+                                }}
+                              />
+                            )}
                           </TableCell>
                         </TableRow>
                       );
@@ -269,7 +285,6 @@ const Category = () => {
               />
               <Typography component="p" className={classes.emptyTitle}>
                 Không có dữ liệu
-                
               </Typography>
             </Box>
           )}
@@ -287,9 +302,18 @@ const Category = () => {
 					theme="dark"
 					type="default"
 				/> */}
-
-       
       </AdminLayout>
+      <ToastContainer
+        position="bottom-center"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
     </>
   );
 };

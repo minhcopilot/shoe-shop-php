@@ -1,11 +1,16 @@
-import { Button, TextField, Typography } from "@material-ui/core";
+import {
+  Button,
+  TextField,
+  Typography,
+  CircularProgress,
+} from "@material-ui/core";
 import Backdrop from "@material-ui/core/Backdrop";
 import Fade from "@material-ui/core/Fade";
 import Modal from "@material-ui/core/Modal";
 import "react-toastify/dist/ReactToastify.css";
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import {
   addCategory,
   updateCategory,
@@ -19,9 +24,37 @@ const AddEditCategory = ({ open, handleClose, category, handleData }) => {
   const dispatch = useDispatch();
   const { register, handleSubmit, reset } = useForm();
   const [error, setError] = useState("");
+  const { addCategoryLoading, categories } = useSelector(
+    (state) => state.category
+  );
+  const [loading, setLoading] = useState(false);
+
+  const checkCategoryNameExists = (name, excludeId = null) => {
+    return categories.some(
+      (cat) =>
+        cat.name.toLowerCase() === name.toLowerCase() && cat.id !== excludeId
+    );
+  };
 
   const handleAddCategory = (data) => {
-    const action = addCategory(data);
+    const trimmedName = data.name.trim();
+    if (trimmedName !== data.name) {
+      setError("Tên danh mục không được chứa khoảng trắng ở đầu hoặc cuối");
+      return;
+    }
+
+    if (trimmedName === "") {
+      setError("Tên danh mục không được để trống");
+      return;
+    }
+
+    if (checkCategoryNameExists(trimmedName)) {
+      setError("Tên danh mục đã tồn tại");
+      return;
+    }
+
+    setLoading(true);
+    const action = addCategory({ ...data, name: trimmedName });
     dispatch(action)
       .unwrap()
       .then((res) => {
@@ -29,57 +62,88 @@ const AddEditCategory = ({ open, handleClose, category, handleData }) => {
         setError("");
         reset();
         const newCategory = {
-          id: res.category.id,
-          name: res.category.name,
-          createdAt: res.createdAt || new Date().toISOString(),
-          updatedAt: res.updatedAt || new Date().toISOString(),
+          id: res.id,
+          name: res.name,
+          created_at: res.created_at || new Date().toISOString(),
+          updated_at: res.updated_at || new Date().toISOString(),
         };
         handleData({ type: "Add", data: newCategory });
-        toast("Add category successfully!", {
+        toast.success("Thêm danh mục thành công!", {
           position: "bottom-center",
           autoClose: 3000,
           hideProgressBar: false,
           closeOnClick: true,
           pauseOnHover: true,
           draggable: true,
-          progress: undefined,
-          type: "success",
         });
       })
       .catch((error) => {
-        setError("Name has already been taken");
+        setError("Có lỗi xảy ra khi thêm danh mục");
+        toast.error("Có lỗi xảy ra khi thêm danh mục!", {
+          position: "bottom-center",
+          autoClose: 3000,
+        });
+      })
+      .finally(() => {
+        setLoading(false);
       });
   };
 
   const handleEditCategory = (data) => {
-    const action = updateCategory(data);
+    const trimmedName = data.name.trim();
+    if (trimmedName !== data.name) {
+      setError("Tên danh mục không được chứa khoảng trắng ở đầu hoặc cuối");
+      return;
+    }
+
+    if (trimmedName === "") {
+      setError("Tên danh mục không được để trống");
+      return;
+    }
+
+    if (checkCategoryNameExists(trimmedName, data.id)) {
+      setError("Tên danh mục đã tồn tại");
+      return;
+    }
+
+    setLoading(true);
+    const action = updateCategory({ ...data, name: trimmedName });
     dispatch(action)
       .unwrap()
       .then((res) => {
         handleClose();
         setError("");
-        
-        handleData({ type: "Edit", data: res.data });
+        const updatedCategory = {
+          ...data,
+          updated_at: res.updated_at || new Date().toISOString(),
+        };
+        handleData({ type: "Edit", data: updatedCategory });
         reset();
-        toast("Update category successfully!", {
+        toast.success("Cập nhật danh mục thành công!", {
           position: "bottom-center",
           autoClose: 3000,
           hideProgressBar: false,
           closeOnClick: true,
           pauseOnHover: true,
           draggable: true,
-          progress: undefined,
-          type: "success",
         });
       })
       .catch((error) => {
-        setError("Name has already been taken");
+        setError("Có lỗi xảy ra khi cập nhật danh mục");
+        toast.error("Có lỗi xảy ra khi cập nhật danh mục!", {
+          position: "bottom-center",
+          autoClose: 3000,
+        });
+      })
+      .finally(() => {
+        setLoading(false);
       });
   };
 
   useEffect(() => {
     reset(category);
-  }, [category,reset]);
+  }, [category, reset]);
+
   return (
     <>
       <Modal
@@ -113,8 +177,14 @@ const AddEditCategory = ({ open, handleClose, category, handleData }) => {
                 {error}
               </Typography>
             )}
-            <Button className={classes.save} type="submit">
-              Lưu
+            <Button type="submit" className={classes.save} disabled={loading}>
+              {loading ? (
+                <CircularProgress size={24} style={{ color: "white" }} />
+              ) : category ? (
+                "Cập nhật"
+              ) : (
+                "Thêm mới"
+              )}
             </Button>
           </form>
         </Fade>
@@ -129,8 +199,6 @@ const AddEditCategory = ({ open, handleClose, category, handleData }) => {
         pauseOnFocusLoss
         draggable
         pauseOnHover
-        theme="dark"
-        type="default"
       />
     </>
   );
