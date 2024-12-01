@@ -9,6 +9,9 @@ use App\Http\Resources\ProductResource;
 use App\Services\ProductService;
 use App\Models\Product;
 use App\Classes\ApiResponse;
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
+use Illuminate\Http\Request;
+
 class ProductsController extends Controller
 {
     protected $productService;
@@ -20,12 +23,15 @@ class ProductsController extends Controller
 
     public function index()
     {
-        try {
-            $products = $this->productService->getProducts(request('search'));
-            return ApiResponse::sendResponse(ProductResource::collection($products), 'Products retrieved successfully');
-        } catch (\Exception $e) {
-            return ApiResponse::rollback($e, 'Failed to retrieve products');
-        }
+        $products = Product::with('category')
+                          ->orderBy('updated_at', 'desc')
+                          ->orderBy('created_at', 'desc')
+                          ->get();
+        
+        return response()->json([
+            'status' => 'success',
+            'data' => $products
+        ]);
     }
 
     public function store(ProductRequest $request)
@@ -34,7 +40,7 @@ class ProductsController extends Controller
             $product = $this->productService->createProduct($request->validated());
             return ApiResponse::sendResponse(new ProductResource($product), 'Product created successfully');
         } catch (\Exception $e) {
-            return ApiResponse::rollback($e, 'Failed to create product');
+            return ApiResponse::rollback($e, 'Failed to create product'. $e);
         }
     }
 
@@ -52,22 +58,38 @@ class ProductsController extends Controller
     }
 
     public function update(UpdateRequest $request, $id)
-{
-    try {
-        $product = Product::find($id);
-        if (!$product) {
-            return ApiResponse::NoSearch(null, 'Product not found');
+    {
+        try {
+            $product = Product::find($id);
+            if (!$product) {
+                return ApiResponse::NoSearch(null, 'Product not found');
+            }
+
+            $data = $request->validated();
+            
+            // Xử lý upload ảnh nếu có file mới
+            if ($request->hasFile('images')) {
+                $uploadedImages = [];
+                foreach ($request->file('images') as $image) {
+                    $result = Cloudinary::upload($image->getRealPath());
+                    $uploadedImages[] = $result->getSecurePath();
+                }
+                $data['images'] = $uploadedImages;
+            } else if (isset($data['images']) && is_array($data['images'])) {
+                // Giữ nguyên mảng URL ảnh cũ nếu không có file upload mới
+            } else {
+                unset($data['images']);
+            }
+
+            $updatedProduct = $this->productService->updateProduct($product, $data);
+            return ApiResponse::sendResponse(
+                new ProductResource($updatedProduct), 
+                'Product updated successfully'
+            );
+        } catch (\Exception $e) {
+            return ApiResponse::rollback($e, 'Failed to update product');
         }
-
-        // Lấy dữ liệu đã xác thực và truyền vào updateProduct
-        $updatedProduct = $this->productService->updateProduct($product, $request->validated());
-
-        return ApiResponse::sendResponse(new ProductResource($updatedProduct), 'Product updated successfully');
-    } catch (\Exception $e) {
-        return ApiResponse::rollback($e, 'Failed to update product');
     }
-}
-
 
     public function destroy($id)
     {
@@ -103,6 +125,26 @@ class ProductsController extends Controller
             return ApiResponse::sendResponse(new ProductResource($restoredProduct), 'Product restored successfully');
         } catch (\Exception $e) {
             return ApiResponse::rollback($e, 'Failed to restore product');
+        }
+    }
+
+    public function upload(Request $request)
+    {
+        try {
+            if (!$request->hasFile('images')) {
+                return response()->json(['error' => 'No image uploaded'], 400);
+            }
+
+            $uploadedImages = [];
+            foreach ($request->file('images') as $image) {
+                // Sử dụng Cloudinary Laravel SDK
+                $result = Cloudinary::upload($image->getRealPath());
+                $uploadedImages[] = $result->getSecurePath();
+            }
+
+            return response()->json($uploadedImages);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
         }
     }
 }

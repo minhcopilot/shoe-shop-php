@@ -5,6 +5,7 @@ import {
   MenuItem,
   Typography,
   TextField,
+  CircularProgress,
 } from "@material-ui/core";
 import Autocomplete from "@material-ui/lab/Autocomplete";
 import { unwrapResult } from "@reduxjs/toolkit";
@@ -23,7 +24,8 @@ import { getAllCategory } from "../../../../redux/slices/categorySlice";
 import {
   addProduct,
   updateProduct,
-  upload,
+  getProduct,
+  getAllProducts,
 } from "../../../../redux/slices/productSlice";
 import { getAllSize } from "../../../../redux/slices/sizeSlice";
 import { useStyles } from "./styles";
@@ -39,6 +41,9 @@ const AddEditProduct = () => {
   const sizes = useSelector((state) => state.size.sizes);
   const { register, handleSubmit, reset } = useForm();
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const productLoading = useSelector((state) => state.product.productLoading);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     const fetchData = () => {
@@ -55,19 +60,33 @@ const AddEditProduct = () => {
   useEffect(() => {
     if (location.state) {
       const { state } = location.state;
-      reset({
-        name: state.name,
-        desc: state.desc,
-        price: state.price,
-        images: state.images,
-        category_id: state.category.id, // sửa 'category' thành 'category_id'
-        stock: state.stock,
-        inStock: state.inStock ? state.inStock.toString() : "true",
-      });
-      setImagesDisplay(state.images || []);
-      setValue(state.size || []);
+      setLoading(true);
+      dispatch(getProduct(state.id))
+        .then(unwrapResult)
+        .then((detailProduct) => {
+          reset({
+            name: detailProduct.name,
+            description: detailProduct.description,
+            price: detailProduct.price,
+            images: detailProduct.images,
+            category_id: detailProduct.category.id,
+            stock: detailProduct.stock,
+            inStock: detailProduct.inStock
+              ? detailProduct.inStock.toString()
+              : "true",
+          });
+          setImagesDisplay(detailProduct.images || []);
+          setValue(detailProduct.sizes || []);
+        })
+        .catch((error) => {
+          console.error("Failed to fetch product detail:", error);
+          toast.error("Failed to load product details");
+        })
+        .finally(() => {
+          setLoading(false);
+        });
     }
-  }, [location.state, reset]);
+  }, [location.state, dispatch, reset]);
 
   const handleOnChangePictures = (e) => {
     const files = Array.from(e.target.files);
@@ -92,17 +111,16 @@ const AddEditProduct = () => {
       return;
     }
 
-    // Chuyển đổi dữ liệu về đúng kiểu trước khi gửi
+    setIsSubmitting(true);
+
     const productData = {
       ...data,
-      price: Number(data.price), // Đảm bảo giá trị là số
-      stock: Number(data.stock), // Đảm bảo số lượng là số
-      category_id: data.category_id, // Đảm bảo category_id đúng
-      size: value.map((size) => size.id), // Chỉ gửi id của size
-      images: imagesUpload.map((image) => image.url || image), // Chỉ gửi URL của ảnh đã upload
+      price: Number(data.price),
+      stock: Number(data.stock),
+      category_id: data.category_id,
+      size: value.map((size) => size.id),
+      images: imagesUpload.map((image) => image.url || image),
     };
-
-    console.log(productData); // Kiểm tra dữ liệu
 
     dispatch(addProduct(productData))
       .then(unwrapResult)
@@ -113,33 +131,82 @@ const AddEditProduct = () => {
         setError("");
         setValue([]);
         toast.success("Add product successfully!");
+        dispatch(getAllProducts());
       })
       .catch((error) => {
-        console.error(error); // Kiểm tra lỗi trả về từ server
+        console.error(error);
         setError("Failed to add product");
+      })
+      .finally(() => {
+        setIsSubmitting(false);
       });
   };
 
   const handleEditProduct = (data) => {
-    const product = {
-      ...data,
-      size: value.map((size) => size.id), // lấy id từ value của kích thước
-      id: location.state.state.id,
-    };
+    setIsSubmitting(true);
 
-    const uploadImages = imagesUpload.length
-      ? dispatch(upload(imagesUpload)).then(unwrapResult)
-      : Promise.resolve(location.state.state.images);
+    if (imagesUpload.length > 0 && imagesUpload[0] instanceof File) {
+      const formData = new FormData();
 
-    uploadImages
-      .then((images) => {
-        product.images = images; // 'images' là mảng URL đã upload
-        dispatch(updateProduct(product))
-          .then(unwrapResult)
-          .then(() => toast.success("Update product successfully!"))
-          .catch(() => setError("Failed to update product"));
-      })
-      .catch(() => setError("Failed to upload images. Please try again."));
+      formData.append("_method", "PUT");
+      formData.append("name", data.name);
+      formData.append("description", data.description);
+      formData.append("price", data.price);
+      formData.append("stock", data.stock);
+      formData.append("category_id", data.category_id);
+      formData.append("inStock", data.inStock || "true");
+
+      value.forEach((size) => {
+        formData.append("sizes[]", size.id);
+      });
+
+      imagesUpload.forEach((file) => {
+        formData.append("images[]", file);
+      });
+
+      for (let pair of formData.entries()) {
+        console.log(pair[0] + ": " + pair[1]);
+      }
+
+      dispatch(
+        updateProduct({
+          id: location.state.state.id,
+          formData: formData,
+        })
+      )
+        .then(unwrapResult)
+        .then(() => {
+          toast.success("Update product successfully!");
+          dispatch(getAllProducts());
+        })
+        .catch((error) => {
+          console.error(error);
+          setError("Failed to update product");
+        })
+        .finally(() => {
+          setIsSubmitting(false);
+        });
+    } else {
+      const product = {
+        ...data,
+        size: value.map((size) => size.id),
+        id: location.state.state.id,
+        images: imagesDisplay,
+      };
+      dispatch(updateProduct(product))
+        .then(unwrapResult)
+        .then(() => {
+          toast.success("Update product successfully!");
+          dispatch(getAllProducts());
+        })
+        .catch((error) => {
+          console.error(error);
+          setError("Failed to update product");
+        })
+        .finally(() => {
+          setIsSubmitting(false);
+        });
+    }
   };
 
   return (
@@ -153,130 +220,159 @@ const AddEditProduct = () => {
           <Typography component="h3" className={classes.heading}>
             {location.state ? "Update" : "New"} sản phẩm
           </Typography>
-          <Box className={classes.content}>
-            <form
-              className={classes.form}
-              onSubmit={handleSubmit(
-                location.state ? handleEditProduct : handleAddProduct
-              )}
+          {loading || productLoading ? (
+            <Box
+              display="flex"
+              justifyContent="center"
+              alignItems="center"
+              minHeight="200px"
             >
-              <Box className={classes.uploadContainer}>
-                <input
-                  accept="image/*"
-                  className={classes.input}
-                  style={{ display: "none" }}
-                  id="raised-button-file"
-                  multiple
-                  type="file"
-                  onChange={handleOnChangePictures}
-                />
-                <label htmlFor="raised-button-file">
-                  Hình ảnh
-                  <Button
-                    variant="raised"
-                    component="span"
-                    className={classes.uploadBtn}
-                  >
-                    Tải lên
-                  </Button>
-                </label>
-              </Box>
-              <TextField
-                label="Tên"
-                variant="outlined"
-                className={classes.inputGroup}
-                {...register("name")}
-                required
-              />
-              <TextField
-                label="Mô tả"
-                variant="outlined"
-                className={classes.inputGroup}
-                {...register("description")}
-                required
-              />
-              <TextField
-                label="Giá"
-                type="number"
-                variant="outlined"
-                className={classes.inputGroup}
-                {...register("price")}
-                required
-              />
-              <TextField
-                label="Stock"
-                type="number"
-                variant="outlined"
-                className={classes.inputGroup}
-                {...register("stock")}
-                required
-              />
-              <TextField
-                className={classes.inputGroup}
-                label="Danh mục"
-                select
-                variant="outlined"
-                {...register("category_id")} // sửa 'category' thành 'category_id'
-                defaultValue={location?.state?.state?.category?.id || ""}
-                required
+              <CircularProgress />
+            </Box>
+          ) : (
+            <Box className={classes.content}>
+              <form
+                className={classes.form}
+                onSubmit={handleSubmit(
+                  location.state ? handleEditProduct : handleAddProduct
+                )}
               >
-                {categories?.map((category) => (
-                  <MenuItem value={category.id} key={category.id}>
-                    {category.name} {/* Hiển thị tên danh mục */}
-                  </MenuItem>
-                ))}
-              </TextField>
-              <Autocomplete
-                className={classes.inputGroup}
-                multiple
-                disableCloseOnSelect
-                value={value}
-                options={sizes}
-                getOptionLabel={(option) => option.name}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="Kích thước"
-                    variant="outlined"
-                    {...register("size")}
-                    fullWidth
+                <Box className={classes.uploadContainer}>
+                  <input
+                    accept="image/*"
+                    className={classes.input}
+                    style={{ display: "none" }}
+                    id="raised-button-file"
+                    multiple
+                    type="file"
+                    onChange={handleOnChangePictures}
                   />
-                )}
-                renderOption={(option, { selected }) => (
-                  <>
-                    <Checkbox
-                      icon={icon}
-                      checkedIcon={checkedIcon}
-                      checked={selected}
-                      style={{ marginRight: 8 }}
+                  <label htmlFor="raised-button-file">
+                    Hình ảnh
+                    <Button
+                      variant="raised"
+                      component="span"
+                      className={classes.uploadBtn}
+                    >
+                      Tải lên
+                    </Button>
+                  </label>
+                </Box>
+                <TextField
+                  label="Tên"
+                  variant="outlined"
+                  className={classes.inputGroup}
+                  {...register("name")}
+                  required
+                />
+                <TextField
+                  label="Mô tả"
+                  variant="outlined"
+                  className={classes.inputGroup}
+                  {...register("description")}
+                  required
+                />
+                <TextField
+                  label="Giá"
+                  type="number"
+                  variant="outlined"
+                  className={classes.inputGroup}
+                  {...register("price")}
+                  required
+                />
+                <TextField
+                  label="Stock"
+                  type="number"
+                  variant="outlined"
+                  className={classes.inputGroup}
+                  {...register("stock")}
+                  required
+                />
+                <TextField
+                  className={classes.inputGroup}
+                  label="Danh mục"
+                  select
+                  variant="outlined"
+                  {...register("category_id")}
+                  defaultValue={location?.state?.state?.category?.id || ""}
+                  required
+                >
+                  {categories?.map((category) => (
+                    <MenuItem value={category.id} key={category.id}>
+                      {category.name}
+                    </MenuItem>
+                  ))}
+                </TextField>
+                <Autocomplete
+                  className={classes.inputGroup}
+                  multiple
+                  disableCloseOnSelect
+                  value={value}
+                  options={sizes}
+                  getOptionLabel={(option) => option.name}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Kích thước"
+                      variant="outlined"
+                      {...register("size")}
+                      fullWidth
                     />
-                    {option.name}
-                  </>
+                  )}
+                  renderOption={(option, { selected }) => (
+                    <>
+                      <Checkbox
+                        icon={icon}
+                        checkedIcon={checkedIcon}
+                        checked={selected}
+                        style={{ marginRight: 8 }}
+                      />
+                      {option.name}
+                    </>
+                  )}
+                  onChange={(_, selectedOptions) => setValue(selectedOptions)}
+                />
+                {error && (
+                  <Typography component="p" className={classes.error}>
+                    {error}
+                  </Typography>
                 )}
-                onChange={(_, selectedOptions) => setValue(selectedOptions)}
-              />
-              {error && (
-                <Typography component="p" className={classes.error}>
-                  {error}
-                </Typography>
-              )}
-              <Button type="submit" className={classes.saveBtn}>
-                Lưu
-              </Button>
-            </form>
-            <Carousel
-              showIndicators={false}
-              showArrows={false}
-              showStatus={false}
-              className={classes.carousel}
-            >
-              {imagesDisplay.map((image, index) => (
-                <div key={index}>
-                  <img src={image.preview} alt={`image-${index}`} />
-                </div>
-              ))}
-            </Carousel>
-          </Box>
+                <Button
+                  type="submit"
+                  className={classes.saveBtn}
+                  disabled={isSubmitting}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "10px",
+                  }}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <CircularProgress size={24} style={{ color: "white" }} />
+                      Đang lưu...
+                    </>
+                  ) : (
+                    "Lưu"
+                  )}
+                </Button>
+              </form>
+
+              <Carousel
+                showIndicators={false}
+                showArrows={false}
+                showStatus={false}
+                className={classes.carousel}
+              >
+                {imagesDisplay.map((image, index) => (
+                  <div key={index}>
+                    <img src={image.preview || image} alt={`image-${index}`} />
+                  </div>
+                ))}
+              </Carousel>
+            </Box>
+          )}
         </Box>
         <ToastContainer
           position="bottom-center"

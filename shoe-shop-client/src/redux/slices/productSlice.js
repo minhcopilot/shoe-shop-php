@@ -1,6 +1,8 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import productAPI from "../../api/productApi";
 import uploadAPI from "../../api/uploadApi";
+import axiosimageClient from "../../api/axiosimageClient";
+import axiosClient from "../../api/axiosClient";
 
 export const getAllProduct = createAsyncThunk(
   "product/getAllProduct",
@@ -13,16 +15,10 @@ export const getAllProduct = createAsyncThunk(
   }
 );
 
-export const getProduct = createAsyncThunk(
-  "product/getProduct",
-  async (id, { rejectWithValue }) => {
-    try {
-      return await productAPI.getProduct(id);
-    } catch (error) {
-      return rejectWithValue(error.response);
-    }
-  }
-);
+export const getProduct = createAsyncThunk("product/getProduct", async (id) => {
+  const response = await productAPI.getProduct(id);
+  return response.data;
+});
 
 export const addProduct = createAsyncThunk(
   "product/addProduct",
@@ -43,15 +39,22 @@ export const addProduct = createAsyncThunk(
 
 export const updateProduct = createAsyncThunk(
   "product/updateProduct",
-  async (data, { rejectWithValue, dispatch }) => {
+  async (data) => {
     try {
-      const result = await productAPI.updateProduct(data);
+      // Kiểm tra xem data có chứa formData không
+      if (data.formData) {
+        const response = await axiosimageClient.post(
+          `/products/${data.id}`,
+          data.formData
+        );
+        return response.data;
+      }
 
-      dispatch(getAllProduct());
-
-      return result;
+      // Nếu không phải FormData (chỉ có URL ảnh), sử dụng axiosClient
+      const response = await axiosClient.put(`/products/${data.id}`, data);
+      return response.data;
     } catch (error) {
-      return rejectWithValue(error.response);
+      throw error;
     }
   }
 );
@@ -74,6 +77,14 @@ export const deleteProduct = createAsyncThunk(
 export const upload = createAsyncThunk("product/upload", async (files) => {
   return await uploadAPI.upload(files);
 });
+
+export const getAllProducts = createAsyncThunk(
+  "product/getAllProducts",
+  async () => {
+    const response = await productAPI.getAll();
+    return response;
+  }
+);
 
 const initialState = {
   products: [],
@@ -99,11 +110,24 @@ const productSlice = createSlice({
     },
     [getProduct.fulfilled]: (state, action) => {
       state.productLoading = false;
-      state.product = action.payload.data;
+      state.product = action.payload;
+    },
+    [getProduct.rejected]: (state) => {
+      state.productLoading = false;
     },
     [addProduct.fulfilled]: (state, action) => {
       state.categoriesLoading = false;
       state.categories = action.payload.data;
+    },
+    [getAllProducts.pending]: (state) => {
+      state.loading = true;
+    },
+    [getAllProducts.fulfilled]: (state, action) => {
+      state.loading = false;
+      state.products = action.payload;
+    },
+    [getAllProducts.rejected]: (state) => {
+      state.loading = false;
     },
   },
 });

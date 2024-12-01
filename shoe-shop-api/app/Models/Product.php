@@ -21,7 +21,9 @@ class Product extends Model
     protected $casts = [
         'images' => 'array',
         'stock' => 'integer',
-        'price' => 'decimal:2'
+        'price' => 'decimal:2',
+        'created_at' => 'datetime:Y-m-d H:i:s',
+        'updated_at' => 'datetime:Y-m-d H:i:s',
     ];
 
     public function category()

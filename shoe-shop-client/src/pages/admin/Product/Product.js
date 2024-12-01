@@ -27,25 +27,34 @@ import {
   getAllProduct,
 } from "../../../redux/slices/productSlice";
 import { useStyles } from "./styles";
+import dayjs from "dayjs";
+import { ClipLoader } from "react-spinners";
 
 const Product = () => {
   const classes = useStyles();
   const dispatch = useDispatch();
   const history = useHistory();
-  
+
   // Get products from the Redux store
   const products = useSelector((state) => state.product.products);
   const [prods, setProds] = useState(products);
   const [filteredProducts, setFilteredProducts] = useState(prods || []);
-  
+
   // Fetch products when component mounts
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         const action = await dispatch(getAllProduct());
         const result = unwrapResult(action);
-        setProds(result.data);  // Update prods with the fetched data
-        setFilteredProducts(result.data);  // Update filteredProducts
+
+        const sortedProducts = [...result.data].sort((a, b) => {
+          const dateA = new Date(a.updated_at || a.created_at).getTime();
+          const dateB = new Date(b.updated_at || b.created_at).getTime();
+          return dateB - dateA;
+        });
+
+        setProds(sortedProducts);
+        setFilteredProducts(sortedProducts);
       } catch (error) {
         console.log("Failed to fetch products:", error);
       }
@@ -58,8 +67,14 @@ const Product = () => {
     history.push("/admin/product/new", { state: product });
   };
 
+  // Thêm state để quản lý loading cho từng sản phẩm
+  const [deletingProducts, setDeletingProducts] = useState({});
+
   // Handle deleting a product
   const handleDeleteProduct = (id) => {
+    // Set loading state cho sản phẩm đang xóa
+    setDeletingProducts((prev) => ({ ...prev, [id]: true }));
+
     const action = deleteProduct(id);
     dispatch(action)
       .then(unwrapResult)
@@ -76,6 +91,10 @@ const Product = () => {
           progress: undefined,
           type: "success",
         });
+      })
+      .finally(() => {
+        // Xóa trạng thái loading khi hoàn thành
+        setDeletingProducts((prev) => ({ ...prev, [id]: false }));
       });
   };
 
@@ -83,7 +102,7 @@ const Product = () => {
   const searchRef = useRef("");
   const handleChangeSearch = (e) => {
     const value = e.target.value;
-    console.log(value);
+
     if (searchRef.current) {
       clearTimeout(searchRef.current);
     }
@@ -167,13 +186,19 @@ const Product = () => {
                         Còn hàng
                       </TableCell>
                       <TableCell align="center" className={classes.tableHead}>
+                        Thời gian
+                      </TableCell>
+                      <TableCell align="center" className={classes.tableHead}>
                         Hành động
                       </TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
                     {filteredProducts
-                      .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                      .slice(
+                        page * rowsPerPage,
+                        page * rowsPerPage + rowsPerPage
+                      )
                       .map((product) => (
                         <TableRow key={product.id}>
                           <TableCell
@@ -194,8 +219,11 @@ const Product = () => {
                             {product?.category?.name || "Chưa có danh mục"}
                           </TableCell>
                           <TableCell align="center">{product.price}</TableCell>
+                          <TableCell align="center">{product.stock}</TableCell>
                           <TableCell align="center">
-                            {product.stock}
+                            {dayjs(
+                              product.updated_at || product.created_at
+                            ).format("DD/MM/YYYY HH:mm")}
                           </TableCell>
                           <TableCell align="center">
                             <BiPencil
@@ -208,12 +236,16 @@ const Product = () => {
                                 handleEditProduct(product);
                               }}
                             />
-                            <BiX
-                              style={{ cursor: "pointer", fontSize: 20 }}
-                              onClick={() => {
-                                handleDeleteProduct(product.id);
-                              }}
-                            />
+                            {deletingProducts[product.id] ? (
+                              <ClipLoader size={15} color="#000" />
+                            ) : (
+                              <BiX
+                                style={{ cursor: "pointer", fontSize: 20 }}
+                                onClick={() => {
+                                  handleDeleteProduct(product.id);
+                                }}
+                              />
+                            )}
                           </TableCell>
                         </TableRow>
                       ))}

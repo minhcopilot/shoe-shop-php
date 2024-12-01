@@ -56,11 +56,12 @@ Route::prefix('products')->group(function () {
     
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/', [ProductsController::class, 'store']);
-        Route::put('/{id}', [ProductsController::class, 'update']);
+        Route::match(['put', 'post'], '/{id}', [ProductsController::class, 'update']);
         Route::delete('/{id}', [ProductsController::class, 'destroy']);
         Route::get('/trashed', [ProductsController::class, 'getTrashed']);
         Route::put('/restore/{id}', [ProductsController::class, 'restore']);
         Route::post('/upload-images', [ProductsController::class, 'uploadImages']);
+        Route::post('/upload', [ProductsController::class, 'upload']);
     });
 });
 
