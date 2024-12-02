@@ -26,7 +26,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/order/add', [OrderController::class, 'createOrder']);
-    Route::put('/order/update/{order}', [OrderController::class, 'updateOrderStatus']);
+    Route::put('/order/update/status/{order}', [OrderController::class, 'updateOrderStatus']);
+    Route::put('/order/update/details/{order}', [OrderController::class, 'updateOrderDetails']);
     Route::get('/orders', [OrderController::class, 'getOrderHistory']);
     Route::delete('/order/delete/{order}', [OrderController::class, 'deleteOrder']);
     Route::post('/orders/search', [OrderController::class, 'searchOrders']);

@@ -19,7 +19,6 @@ const orderAPI = {
     }
   },
   
-
   // Thêm đơn hàng mới
   addOrder: async (data) => {
     const url = '/order/add'; // Đảm bảo URL chính xác với controller
@@ -33,28 +32,39 @@ const orderAPI = {
   },
 
   // Cập nhật trạng thái đơn hàng
-  updateOrder: async (id, data) => {
-    const url = `/order/update/${id}`;
+  updateOrderStatus: async (id, data) => {
+    const url = `/order/update/status/${id}`;
     try {
       const response = await axiosClient.put(url, data);
       return response.data;  // Trả về dữ liệu sau khi cập nhật thành công
     } catch (error) {
-      console.error('Error updating order:', error);
+      console.error('Error updating order status:', error);
       throw error;  // Ném lỗi để có thể bắt lại ở nơi gọi API
     }
   },
 
-   getOrderDetail : async (orderId) => {
+  // Cập nhật địa chỉ và số điện thoại của đơn hàng
+  updateOrderDetails: async (id, data) => {
+    const url = `/order/update/details/${id}`;
+    try {
+      const response = await axiosClient.put(url, data);
+      return response.data;  // Trả về dữ liệu sau khi cập nhật thành công
+    } catch (error) {
+      console.error('Error updating order details:', error);
+      throw error;  // Ném lỗi để có thể bắt lại ở nơi gọi API
+    }
+  },
+
+  getOrderDetail: async (orderId) => {
     const url = `/order/detail/${orderId}`; // Cập nhật URL với chi tiết đơn hàng
     try {
       const response = await axiosClient.get(url);
 
-      
       // Kiểm tra phản hồi hợp lệ và trả về chi tiết đơn hàng
       if (!response || !response.order) {
         throw new Error("Không có dữ liệu đơn hàng");
       }
-  
+
       // Nếu dữ liệu hợp lệ, trả về thông tin chi tiết đơn hàng
       return response; // Trả về toàn bộ response để xử lý bên ngoài
     } catch (error) {
@@ -62,9 +72,6 @@ const orderAPI = {
       throw error; // Ném lỗi để thông báo cho component gọi API
     }
   },
-  
-  
- 
 
   // Xóa đơn hàng
   deleteOrder: async (id) => {
