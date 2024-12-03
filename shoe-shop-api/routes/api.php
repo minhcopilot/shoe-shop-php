@@ -15,13 +15,14 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\CategoryController;
 
-
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/cart', [CartController::class, 'getCart']); // Fetch user's cart
     Route::post('/cart/add', [CartController::class, 'addToCart']); // Add to cart
     Route::put('/cart/update/{cart_id}', [CartController::class, 'updateCart']); // Update cart item
     Route::delete('/cart/remove/{cart_id}', [CartController::class, 'removeFromCart']); // Remove item from cart
+    
 });
+
 
 
 Route::middleware('auth:sanctum')->group(function () {
@@ -32,6 +33,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/order/delete/{order}', [OrderController::class, 'deleteOrder']);
     Route::post('/orders/search', [OrderController::class, 'searchOrders']);
     Route::get('/order/detail/{orderId}', [OrderController::class, 'getOrderDetail']);
+
 });
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {

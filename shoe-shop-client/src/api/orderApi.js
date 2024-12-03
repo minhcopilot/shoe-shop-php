@@ -19,18 +19,32 @@ const orderAPI = {
     }
   },
   
-  // Thêm đơn hàng mới
+  // // Thêm đơn hàng mới
+  // addOrder: async (data) => {
+  //   const url = '/order/add'; // Đảm bảo URL chính xác với controller
+  //   try {
+  //     const response = await axiosClient.post(url, data);
+  //     return response.data;
+  //   } catch (error) {
+  //     console.error('Error adding order:', error.response?.data || error.message);
+  //     throw error;
+  //   }
+  // },
   addOrder: async (data) => {
     const url = '/order/add'; // Đảm bảo URL chính xác với controller
     try {
       const response = await axiosClient.post(url, data);
+      console.log(response.vnpay_url);
       return response.data;
+      
     } catch (error) {
       console.error('Error adding order:', error.response?.data || error.message);
       throw error;
     }
-  },
+},
+  
 
+  
   // Cập nhật trạng thái đơn hàng
   updateOrderStatus: async (id, data) => {
     const url = `/order/update/status/${id}`;

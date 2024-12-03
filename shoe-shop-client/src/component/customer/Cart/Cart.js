@@ -276,6 +276,7 @@ const Cart = () => {
                 </Typography>
                 <Button
                   onClick={handleOrder}
+                  name="redirect"
                   className={classes.checkoutBtn}
                 >
                   Thanh toán
@@ -314,7 +315,8 @@ const Cart = () => {
               </Box>
 
               {/* Center section: Payment method and actions */}
-              <Box className={classes.centerSection}>
+            
+  <Box className={classes.centerSection}>
                 <Box className={classes.formGroup}>
                   <Typography className={classes.formLabel}>Phương thức thanh toán</Typography>
                   <Box className={classes.paymentMethods}>
@@ -330,15 +332,15 @@ const Cart = () => {
                       <Typography>Tiền mặt</Typography>
                     </Box>
                     <Box
-                      className={`${classes.paymentMethod} ${paymentMethod === 'MoMo' ? classes.selected : ''}`}
-                      onClick={() => setPaymentMethod('MoMo')}
+                      className={`${classes.paymentMethod} ${paymentMethod === 'VNPAY' ? classes.selected : ''}`}
+                      onClick={() => setPaymentMethod('VNPAY')}
                     >
                       <img
                         src="https://homepage.momocdn.net/fileuploads/svg/momo-file-240411162904.svg"
                         alt="Momo"
                         className={classes.paymentImage}
                       />
-                      <Typography>Momo</Typography>
+                      <Typography>VNPAY</Typography>
                     </Box>
                     <Box
                       className={`${classes.paymentMethod} ${paymentMethod === 'Thẻ ngân hàng' ? classes.selected : ''}`}
@@ -354,37 +356,6 @@ const Cart = () => {
                   </Box>
                 </Box>
 
-                {/* Show the Pay Now button if Momo is selected */}
-                {paymentMethod === 'momo' && !isProcessing && !paymentComplete && (
-                  <Button variant="contained" color="primary" onClick={handlePayment}>
-                    Xử lý thanh toán
-                  </Button>
-                )}
-
-                {/* Show loading indicator when payment is processing */}
-                {isProcessing && (
-                  <Box className={classes.loadingContainer}>
-                    <CircularProgress />
-                    <Typography>Đang xử lý thanh toán...</Typography>
-                  </Box>
-                )}
-
-                {/* Show Payment Complete message */}
-                {paymentComplete && (
-                  <Box className={classes.paymentCompleteContainer}>
-                    <Typography variant="h6" color="primary">Thanh toán hoàn tất!</Typography>
-                  </Box>
-                )}
-              </Box>
-
-              {/* Right section: QR Code */}
-              <Box className={classes.rightSection}>
-                {showQRCode && paymentMethod === 'momo' && !paymentComplete && (
-                  <Box className={classes.qrCodeContainer}>
-                    <Typography className={classes.formLabel}>Mã QR thanh toán Momo</Typography>
-                    <QRCode value="momo_payment_code" /> {/* Replace with the actual Momo payment link */}
-                  </Box>
-                )}
               </Box>
             </Box>
 
