@@ -97,57 +97,6 @@ const Cart = () => {
     return sum + item.product.price * item.quantity;
   }, 0);
 
-  // const handleOrder = async () => {
-  //   validatePhone();
-  //   validateAddress();
-
-  //   if (!phoneError && !addressError) {
-  //     try {
-  //       // Chuẩn bị dữ liệu giỏ hàng
-  //       const cartItemsData = cartItems.map(item => ({
-  //         product_id: item.product.id,
-  //         quantity: item.quantity,
-  //         size_id: item.chooseSize.id || null,
-  //       }));
-
-  //       const orderData = {
-  //         payment_method: paymentMethod,
-  //         address,
-  //         sdt: phone,
-  //         cart_items: cartItemsData,
-  //       };
-
-  //       // Gọi API để tạo đơn hàng
-  //       const newOrder = await orderAPI.addOrder(orderData);
-  //       console.log(newOrder); // In ra thông tin đơn hàng
-
-  //       // Lấy id và total_price từ response.order
-  //       const orderId = newOrder.id;           // Lấy ID đơn hàng
-  //       const orderTotalPrice = newOrder.total_price; // Lấy tổng giá trị đơn hàng
-
-  //       // Nếu phương thức thanh toán là VNPAY, gọi API thanh toán
-  //       if (paymentMethod === 'VNPAY') {
-  //         try {
-  //           const vnpayUrl = await orderAPI.vnpayPayment({
-  //             id: orderId,       // ID đơn hàng
-  //             amount: orderTotalPrice, // Tổng tiền từ phản hồi API
-  //           });
-
-  //           if (vnpayUrl) {
-  //             window.location.href = vnpayUrl; // Redirect đến URL thanh toán
-  //           }
-  //         } catch (paymentError) {
-  //           console.error('Error during VNPAY payment:', paymentError.message);
-  //         }
-  //       } else {
-  //         // Nếu không phải VNPAY, điều hướng đến trang "order"
-  //         history.push('/order');
-  //       }
-  //     } catch (error) {
-  //       console.error('Error creating order:', error);
-  //     }
-  //   }
-  // };
 
   const handleOrder = async () => {
     validatePhone();
@@ -336,14 +285,7 @@ const Cart = () => {
               <Box className={classes.checkout}>
                 <Typography>
                   Tổng: {new Intl.NumberFormat("vi-VN").format(total)} VND
-                </Typography>
-                {/* <Button
-                    onClick={handleOrder}
-                      name ="redirect"
-                    className={classes.checkoutBtn}
-                  >
-                    Thanh toán
-                  </Button> */}
+                </Typography>           
                 <Button
                   onClick={handleOrder}
                   className={classes.checkoutBtn}
