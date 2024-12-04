@@ -23,8 +23,6 @@ Route::middleware('auth:sanctum')->group(function () {
     
 });
 
-
-
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/order/add', [OrderController::class, 'createOrder']);
     Route::put('/order/update/status/{order}', [OrderController::class, 'updateOrderStatus']);
@@ -33,6 +31,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/order/delete/{order}', [OrderController::class, 'deleteOrder']);
     Route::post('/orders/search', [OrderController::class, 'searchOrders']);
     Route::get('/order/detail/{orderId}', [OrderController::class, 'getOrderDetail']);
+    Route::get('/admin/order/detail/{orderId}', [OrderController::class, 'getOrderDetailForAdmin']);
     Route::post('/vnpay', [OrderController::class, 'vnpayPayment']);
 });
 

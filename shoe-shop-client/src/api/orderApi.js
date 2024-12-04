@@ -19,17 +19,7 @@ const orderAPI = {
     }
   },
   
-  // // Thêm đơn hàng mới
-  // addOrder: async (data) => {
-  //   const url = '/order/add'; // Đảm bảo URL chính xác với controller
-  //   try {
-  //     const response = await axiosClient.post(url, data);
-  //     return response.data;
-  //   } catch (error) {
-  //     console.error('Error adding order:', error.response?.data || error.message);
-  //     throw error;
-  //   }
-  // },
+
   addOrder: async (data) => {
     const url = '/order/add'; // Đảm bảo URL chính xác với controller
     try {
@@ -88,7 +78,25 @@ vnpayPayment: async (data) => {
     const url = `/order/detail/${orderId}`; // Cập nhật URL với chi tiết đơn hàng
     try {
       const response = await axiosClient.get(url);
+      console.log(response.order);
+      // Kiểm tra phản hồi hợp lệ và trả về chi tiết đơn hàng
+      if (!response || !response.order) {
+        throw new Error("Không có dữ liệu đơn hàng");
+      }
 
+      // Nếu dữ liệu hợp lệ, trả về thông tin chi tiết đơn hàng
+      return response; // Trả về toàn bộ response để xử lý bên ngoài
+    } catch (error) {
+      console.error("Error fetching order details:", error.message);
+      throw error; // Ném lỗi để thông báo cho component gọi API
+    }
+  },
+
+  getOrderDetailForAdmin: async (orderId) => {
+    const url = `/admin/order/detail/${orderId}`; // Cập nhật URL với chi tiết đơn hàng
+    try {
+      const response = await axiosClient.get(url);
+      console.log(response.order);
       // Kiểm tra phản hồi hợp lệ và trả về chi tiết đơn hàng
       if (!response || !response.order) {
         throw new Error("Không có dữ liệu đơn hàng");

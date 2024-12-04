@@ -358,8 +358,6 @@ const handleDeleteOrder = async (orderId) => {
         </Modal>
 
         {/* Modal for order details */}
-
-
         <Modal open={openDetailModal} onClose={() => setOpenDetailModal(false)}>
           <Box
             style={{

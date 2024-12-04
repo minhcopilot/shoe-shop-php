@@ -70,6 +70,19 @@ const useStyles = makeStyles((theme) => ({
 			color: theme.palette.text.secondary,
 		},
 	},
+	checkoutBtn: {
+		padding: '15px 30px',
+		borderRadius: 10,
+		backgroundColor: theme.palette.text.secondary,
+		border: '1px solid #ddd',
+		color: theme.palette.primary.main,
+		marginBottom: 20,
+
+		'&:hover': {
+			backgroundColor: theme.palette.primary.main,
+			color: theme.palette.text.secondary,
+		},
+	},
 }))
 
 export { useStyles }

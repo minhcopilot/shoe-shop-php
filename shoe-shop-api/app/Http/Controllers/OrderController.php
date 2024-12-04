@@ -297,6 +297,72 @@ class OrderController extends Controller
         ]);
     }
 
+    // public function getOrderDetailForAdmin($orderId)
+    // {
+    //     $user = Auth::user();
+
+    //    // Tạo truy vấn cho tất cả các đơn hàng
+    // $query = Order::with('orderItems.product', 'orderItems.size'); // Tải thông tin sản phẩm và kích thước
+
+    // // Nếu không phải admin, chỉ cho phép xem đơn hàng của chính mình
+    // if (!$user->is_admin) {
+    //     $query->where('user_id', $user->id);
+    // }
+
+    // // Lấy thông tin đơn hàng theo ID
+    // $order = $query->findOrFail($orderId); // Nếu không tìm thấy đơn hàng thì trả về lỗi 404
+
+    // // Chuyển đổi các orderItems để hiển thị thông tin chi tiết về sản phẩm và kích thước
+    // $order->orderItems->transform(function ($item) {
+    //     $item->product_name = optional($item->product)->name;   // Thêm tên sản phẩm vào OrderItem
+    //     $item->size_name = optional($item->size)->name;         // Thêm tên kích thước vào OrderItem
+    //     $item->price = optional($item->product)->price;         // Thêm giá sản phẩm vào OrderItem
+    //     $item->image = optional($item->product->images);        // Thêm ảnh sản phẩm vào OrderItem
+    //     $item->quantity = $item->quantity;                      // Số lượng
+    //     $item->sdt = $item->sdt;                                // Số điện thoại (nếu có)
+    //     return $item;
+    // });
+
+    //     return response()->json([
+    //         'order' => $order,
+    //         'error' => false,
+    //     ]);
+    // }
+
+    public function getOrderDetailForAdmin($orderId)
+{
+    $user = Auth::user();
+
+    // Tạo truy vấn cho tất cả các đơn hàng
+    $query = Order::with('orderItems.product', 'orderItems.size', 'user'); // Tải thông tin sản phẩm, kích thước và người dùng
+
+    // Nếu không phải admin, chỉ cho phép xem đơn hàng của chính mình
+    if (!$user->is_admin) {
+        $query->where('user_id', $user->id);
+    }
+
+    // Lấy thông tin đơn hàng theo ID
+    $order = $query->findOrFail($orderId); // Nếu không tìm thấy đơn hàng thì trả về lỗi 404
+
+    // Chuyển đổi các orderItems để hiển thị thông tin chi tiết về sản phẩm và kích thước
+    $order->orderItems->transform(function ($item) {
+        $item->product_name = optional($item->product)->name;   // Thêm tên sản phẩm vào OrderItem
+        $item->size_name = optional($item->size)->name;         // Thêm tên kích thước vào OrderItem
+        $item->price = optional($item->product)->price;         // Thêm giá sản phẩm vào OrderItem
+        $item->image = optional($item->product->images);        // Thêm ảnh sản phẩm vào OrderItem
+        $item->quantity = $item->quantity;                      // Số lượng
+        $item->sdt = $item->sdt;                                // Số điện thoại (nếu có)
+        return $item;
+    });
+
+    // Trả về thông tin chi tiết của đơn hàng và thông tin người dùng
+    return response()->json([
+        'order' => $order,
+        'user' => $order->user->name, // Lấy tên người dùng
+        'error' => false,
+    ]);
+}
+
     // Delete Order
     public function deleteOrder($orderId)
     {
