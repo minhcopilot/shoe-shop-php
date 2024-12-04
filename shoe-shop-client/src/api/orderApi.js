@@ -34,17 +34,32 @@ const orderAPI = {
     const url = '/order/add'; // Đảm bảo URL chính xác với controller
     try {
       const response = await axiosClient.post(url, data);
-      console.log(response.vnpay_url);
-      return response.data;
+      console.log(response.order);
+      return response.order;
       
     } catch (error) {
       console.error('Error adding order:', error.response?.data || error.message);
       throw error;
     }
 },
-  
 
-  
+vnpayPayment: async (data) => {
+  const url = '/vnpay'; // Endpoint của API VNPAY trong backend
+  try {
+    const response = await axiosClient.post(url, data);
+
+    // Kiểm tra xem response có chứa URL VNPAY không
+    if (response && response.code === '00' && response.data) {
+      return response.data; // URL thanh toán VNPAY
+    } else {
+      throw new Error(response.message || 'Failed to initiate VNPAY payment');
+    }
+  } catch (error) {
+    console.error('Error in VNPAY payment API:', error.message);
+    throw error;
+  }
+},
+
   // Cập nhật trạng thái đơn hàng
   updateOrderStatus: async (id, data) => {
     const url = `/order/update/status/${id}`;

@@ -19,7 +19,7 @@ class OrderController extends Controller
     }
 
 
-   
+
     public function createOrder(Request $request)
     {
         // Validate dữ liệu đầu vào
@@ -82,103 +82,169 @@ class OrderController extends Controller
             'error' => false,
         ], 201);
     }
-   
-    
-public function updateOrderStatus(Request $request, $orderId)
-{
-    // Lấy user hiện tại
-    $user = Auth::user();
-    
-    // Lấy đơn hàng theo `orderId`, kiểm tra quyền truy cập
-    $order = Order::findOrFail($orderId);
-    
-    if (!$user->is_admin && $order->user_id !== $user->id) {
-        return response()->json([
-            'message' => 'Bạn không có quyền cập nhật đơn hàng này.',
-            'error' => true,
-        ], 403);
+    public function vnpayPayment(Request $request)
+    {
+    $vnp_Url = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
+    $vnp_Returnurl = "http://localhost:3000/order";
+    $vnp_TmnCode = "W08PXQHX";//Mã website tại VNPAY 
+    $vnp_HashSecret = "V512UALWT3CCQG8L6KYQUWPEL0Y8T2E3"; //Chuỗi bí mật
+
+    $vnp_TxnRef = $request->id; //Mã đơn hàng. Trong thực tế Merchant cần insert đơn hàng vào DB và gửi mã này sang VNPAY
+    $vnp_OrderInfo = 'thanh toán đơn hàng';
+    $vnp_OrderType = 'billpayment';
+    $vnp_Amount = $request->amount * 100;
+    $vnp_Locale = 'VN';
+    $vnp_BankCode = 'NCB';
+    $vnp_IpAddr = $_SERVER['REMOTE_ADDR'];
+
+    $inputData = array(
+        "vnp_Version" => "2.1.0",
+        "vnp_TmnCode" => $vnp_TmnCode,
+        "vnp_Amount" => $vnp_Amount,
+        "vnp_Command" => "pay",
+        "vnp_CreateDate" => date('YmdHis'),
+        "vnp_CurrCode" => "VND",
+        "vnp_IpAddr" => $vnp_IpAddr,
+        "vnp_Locale" => $vnp_Locale,
+        "vnp_OrderInfo" => $vnp_OrderInfo,
+        "vnp_OrderType" => $vnp_OrderType,
+        "vnp_ReturnUrl" => $vnp_Returnurl,
+        "vnp_TxnRef" => $vnp_TxnRef,
+    );
+
+    if (isset($vnp_BankCode) && $vnp_BankCode != "") {
+        $inputData['vnp_BankCode'] = $vnp_BankCode;
+    }
+    if (isset($vnp_Bill_State) && $vnp_Bill_State != "") {
+        $inputData['vnp_Bill_State'] = $vnp_Bill_State;
     }
 
-    // Xác thực dữ liệu đầu vào
-    $validatedData = $request->validate([
-        'status' => 'nullable|string|in:Chờ xác nhận,Đã xác nhận,Đang giao hàng,Huỷ,Thành công', // Trạng thái hợp lệ (tùy chọn)
-    ]);
-    
-    if ($user->is_admin) {
-        // Admin được phép cập nhật mọi trạng thái
-        if ($request->has('status')) {
-            $order->status = $request->status;
-        }
-    } else {
-        // User chỉ có thể thay đổi trạng thái thành "Huỷ"
-        if ($request->has('status') && $request->status == 'Huỷ') {
-            $order->status = 'Huỷ';
+    //var_dump($inputData);
+    ksort($inputData);
+    $query = "";
+    $i = 0;
+    $hashdata = "";
+    foreach ($inputData as $key => $value) {
+        if ($i == 1) {
+            $hashdata .= '&' . urlencode($key) . "=" . urlencode($value);
         } else {
+            $hashdata .= urlencode($key) . "=" . urlencode($value);
+            $i = 1;
+        }
+        $query .= urlencode($key) . "=" . urlencode($value) . '&';
+    }
+
+    $vnp_Url = $vnp_Url . "?" . $query;
+    if (isset($vnp_HashSecret)) {
+        $vnpSecureHash =   hash_hmac('sha512', $hashdata, $vnp_HashSecret);//  
+        $vnp_Url .= 'vnp_SecureHash=' . $vnpSecureHash;
+    }
+    $returnData = array('code' => '00'
+        , 'message' => 'success'
+        , 'data' => $vnp_Url);
+        if (isset($_POST['redirect'])) {
+            header('Location: ' . $vnp_Url);
+            die();
+        } else {
+            echo json_encode($returnData);
+        }
+    }
+
+    public function updateOrderStatus(Request $request, $orderId)
+    {
+        // Lấy user hiện tại
+        $user = Auth::user();
+
+        // Lấy đơn hàng theo `orderId`, kiểm tra quyền truy cập
+        $order = Order::findOrFail($orderId);
+
+        if (!$user->is_admin && $order->user_id !== $user->id) {
             return response()->json([
-                'message' => 'Bạn chỉ có thể huỷ đơn hàng.',
+                'message' => 'Bạn không có quyền cập nhật đơn hàng này.',
                 'error' => true,
             ], 403);
         }
-    }
 
-    // Lưu đơn hàng
-    $order->save();
+        // Xác thực dữ liệu đầu vào
+        $validatedData = $request->validate([
+            'status' => 'nullable|string|in:Chờ xác nhận,Đã xác nhận,Đang giao hàng,Huỷ,Thành công', // Trạng thái hợp lệ (tùy chọn)
+        ]);
 
-    return response()->json([
-        'message' => 'Cập nhật trạng thái đơn hàng thành công.',
-        'order' => $order,
-    ], 200);
-}
+        if ($user->is_admin) {
+            // Admin được phép cập nhật mọi trạng thái
+            if ($request->has('status')) {
+                $order->status = $request->status;
+            }
+        } else {
+            // User chỉ có thể thay đổi trạng thái thành "Huỷ"
+            if ($request->has('status') && $request->status == 'Huỷ') {
+                $order->status = 'Huỷ';
+            } else {
+                return response()->json([
+                    'message' => 'Bạn chỉ có thể huỷ đơn hàng.',
+                    'error' => true,
+                ], 403);
+            }
+        }
 
-// Cập nhật địa chỉ và số điện thoại
-public function updateOrderDetails(Request $request, $orderId)
-{
-    // Lấy user hiện tại
-    $user = Auth::user();
-    
-    // Lấy đơn hàng theo `orderId`, kiểm tra quyền truy cập
-    $order = Order::findOrFail($orderId);
-    
-    // Kiểm tra quyền truy cập của người dùng
-    if (!$user->is_admin && $order->user_id !== $user->id) {
+        // Lưu đơn hàng
+        $order->save();
+
         return response()->json([
-            'message' => 'Bạn không có quyền cập nhật đơn hàng này.',
-            'error' => true,
-        ], 403);
+            'message' => 'Cập nhật trạng thái đơn hàng thành công.',
+            'order' => $order,
+        ], 200);
     }
 
-    // Xác thực dữ liệu đầu vào
-    $validatedData = $request->validate([
-        'address' => 'required_if:is_admin,false|string|max:255', // User cần cung cấp địa chỉ
-        'sdt' => ['nullable', 'string', 'regex:/^\d{10}$/'],      // Số điện thoại (tùy chọn, phải là 10 chữ số)
-    ]);
-    
-    // Admin có thể thay đổi địa chỉ và số điện thoại của bất kỳ đơn hàng nào
-    if ($user->is_admin) {
-        if ($request->has('address')) {
-            $order->address = $validatedData['address'];
+    // Cập nhật địa chỉ và số điện thoại
+    public function updateOrderDetails(Request $request, $orderId)
+    {
+        // Lấy user hiện tại
+        $user = Auth::user();
+
+        // Lấy đơn hàng theo `orderId`, kiểm tra quyền truy cập
+        $order = Order::findOrFail($orderId);
+
+        // Kiểm tra quyền truy cập của người dùng
+        if (!$user->is_admin && $order->user_id !== $user->id) {
+            return response()->json([
+                'message' => 'Bạn không có quyền cập nhật đơn hàng này.',
+                'error' => true,
+            ], 403);
         }
-        if ($request->has('sdt')) {
-            $order->sdt = $validatedData['sdt'];
+
+        // Xác thực dữ liệu đầu vào
+        $validatedData = $request->validate([
+            'address' => 'required_if:is_admin,false|string|max:255', // User cần cung cấp địa chỉ
+            'sdt' => ['nullable', 'string', 'regex:/^\d{10}$/'],      // Số điện thoại (tùy chọn, phải là 10 chữ số)
+        ]);
+
+        // Admin có thể thay đổi địa chỉ và số điện thoại của bất kỳ đơn hàng nào
+        if ($user->is_admin) {
+            if ($request->has('address')) {
+                $order->address = $validatedData['address'];
+            }
+            if ($request->has('sdt')) {
+                $order->sdt = $validatedData['sdt'];
+            }
+        } else {
+            // User chỉ được phép thay đổi địa chỉ và số điện thoại của chính mình
+            if ($request->has('address')) {
+                $order->address = $validatedData['address'];
+            }
+            if ($request->has('sdt')) {
+                $order->sdt = $validatedData['sdt'];
+            }
         }
-    } else {
-        // User chỉ được phép thay đổi địa chỉ và số điện thoại của chính mình
-        if ($request->has('address')) {
-            $order->address = $validatedData['address'];
-        }
-        if ($request->has('sdt')) {
-            $order->sdt = $validatedData['sdt'];
-        }
+
+        // Lưu đơn hàng
+        $order->save();
+
+        return response()->json([
+            'message' => 'Cập nhật thông tin đơn hàng thành công.',
+            'order' => $order,
+        ], 200);
     }
-
-    // Lưu đơn hàng
-    $order->save();
-
-    return response()->json([
-        'message' => 'Cập nhật thông tin đơn hàng thành công.',
-        'order' => $order,
-    ], 200);
-}
 
 
 
@@ -277,75 +343,4 @@ public function updateOrderDetails(Request $request, $orderId)
         // Cập nhật giỏ hàng trong thông tin người dùng
         $user->update(['cart' => []]);
     }
-
-    public function vnpayPayment()
-    {
-        $vnp_Url = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
-    $vnp_Returnurl = "http://localhost:3000/order";
-    $vnp_TmnCode = "W08PXQHX";//Mã website tại VNPAY 
-    $vnp_HashSecret = "V512UALWT3CCQG8L6KYQUWPEL0Y8T2E3"; //Chuỗi bí mật
-    
-    $vnp_TxnRef = $_POST['order_id']; //Mã đơn hàng. Trong thực tế Merchant cần insert đơn hàng vào DB và gửi mã này sang VNPAY
-    $vnp_OrderInfo = $_POST['order_desc'];
-    $vnp_OrderType = 'billpayment';
-    $vnp_Amount = $_POST['amount'] * 100;
-    $vnp_Locale = 'VN';
-    $vnp_BankCode = 'NCB';
-    $vnp_IpAddr = $_SERVER['REMOTE_ADDR'];
-  
-    $inputData = array(
-        "vnp_Version" => "2.1.0",
-        "vnp_TmnCode" => $vnp_TmnCode,
-        "vnp_Amount" => $vnp_Amount,
-        "vnp_Command" => "pay",
-        "vnp_CreateDate" => date('YmdHis'),
-        "vnp_CurrCode" => "VND",
-        "vnp_IpAddr" => $vnp_IpAddr,
-        "vnp_Locale" => $vnp_Locale,
-        "vnp_OrderInfo" => $vnp_OrderInfo,
-        "vnp_OrderType" => $vnp_OrderType,
-        "vnp_ReturnUrl" => $vnp_Returnurl,
-        "vnp_TxnRef" => $vnp_TxnRef,
-    );
-    
-    if (isset($vnp_BankCode) && $vnp_BankCode != "") {
-        $inputData['vnp_BankCode'] = $vnp_BankCode;
-    }
-    if (isset($vnp_Bill_State) && $vnp_Bill_State != "") {
-        $inputData['vnp_Bill_State'] = $vnp_Bill_State;
-    }
-    
-    //var_dump($inputData);
-    ksort($inputData);
-    $query = "";
-    $i = 0;
-    $hashdata = "";
-    foreach ($inputData as $key => $value) {
-        if ($i == 1) {
-            $hashdata .= '&' . urlencode($key) . "=" . urlencode($value);
-        } else {
-            $hashdata .= urlencode($key) . "=" . urlencode($value);
-            $i = 1;
-        }
-        $query .= urlencode($key) . "=" . urlencode($value) . '&';
-    }
-    
-    $vnp_Url = $vnp_Url . "?" . $query;
-    if (isset($vnp_HashSecret)) {
-        $vnpSecureHash =   hash_hmac('sha512', $hashdata, $vnp_HashSecret);//  
-        $vnp_Url .= 'vnp_SecureHash=' . $vnpSecureHash;
-    }
-    $returnData = array('code' => '00'
-        , 'message' => 'success'
-        , 'data' => $vnp_Url);
-        if (isset($_POST['redirect'])) {
-            header('Location: ' . $vnp_Url);
-            die();
-        } else {
-            echo json_encode($returnData);
-        }
-        // vui lòng tham khảo thêm tại code demo
-    }
-
-   
 }

@@ -33,7 +33,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/order/delete/{order}', [OrderController::class, 'deleteOrder']);
     Route::post('/orders/search', [OrderController::class, 'searchOrders']);
     Route::get('/order/detail/{orderId}', [OrderController::class, 'getOrderDetail']);
-
+    Route::post('/vnpay', [OrderController::class, 'vnpayPayment']);
 });
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
