@@ -44,10 +44,11 @@ class AuthController extends Controller
         ]);
 
         $user->sendEmailVerificationNotification();
-
+        $token = $user->createToken('YourAppName')->plainTextToken;   
         return response()->json([
             'message' => 'User registered successfully. Please verify your email before logging in.',
             'user' => $user,
+            'token' => $token
         ], 201);
     }
 

@@ -16,8 +16,13 @@ const VerifyEmail = () => {
     setLoading(true);
     setMessage("");
     try {
-      const token = localStorage.getItem("authToken"); // Lấy token từ localStorage
-      const response = await axios.get("http://localhost:8000/api/email/verify/send", {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setMessage("Token không tồn tại! Vui lòng đăng nhập lại.");
+        setLoading(false);
+        return;
+      }
+      const response = await axios.get("http://127.0.0.1:8000/api/email/verify/send", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -44,7 +49,7 @@ const VerifyEmail = () => {
       {message && (
         <Typography
           variant="body2"
-          style={{ color: "green", marginTop: "10px" }}
+          style={{ color: message.includes("không") ? "red" : "green", marginTop: "10px" }}
         >
           {message}
         </Typography>
