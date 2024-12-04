@@ -97,60 +97,107 @@ const Cart = () => {
     return sum + item.product.price * item.quantity;
   }, 0);
 
+  // const handleOrder = async () => {
+  //   validatePhone();
+  //   validateAddress();
+
+  //   if (!phoneError && !addressError) {
+  //     try {
+  //       // Chuẩn bị dữ liệu giỏ hàng
+  //       const cartItemsData = cartItems.map(item => ({
+  //         product_id: item.product.id,
+  //         quantity: item.quantity,
+  //         size_id: item.chooseSize.id || null,
+  //       }));
+
+  //       const orderData = {
+  //         payment_method: paymentMethod,
+  //         address,
+  //         sdt: phone,
+  //         cart_items: cartItemsData,
+  //       };
+
+  //       // Gọi API để tạo đơn hàng
+  //       const newOrder = await orderAPI.addOrder(orderData);
+  //       console.log(newOrder); // In ra thông tin đơn hàng
+
+  //       // Lấy id và total_price từ response.order
+  //       const orderId = newOrder.id;           // Lấy ID đơn hàng
+  //       const orderTotalPrice = newOrder.total_price; // Lấy tổng giá trị đơn hàng
+
+  //       // Nếu phương thức thanh toán là VNPAY, gọi API thanh toán
+  //       if (paymentMethod === 'VNPAY') {
+  //         try {
+  //           const vnpayUrl = await orderAPI.vnpayPayment({
+  //             id: orderId,       // ID đơn hàng
+  //             amount: orderTotalPrice, // Tổng tiền từ phản hồi API
+  //           });
+
+  //           if (vnpayUrl) {
+  //             window.location.href = vnpayUrl; // Redirect đến URL thanh toán
+  //           }
+  //         } catch (paymentError) {
+  //           console.error('Error during VNPAY payment:', paymentError.message);
+  //         }
+  //       } else {
+  //         // Nếu không phải VNPAY, điều hướng đến trang "order"
+  //         history.push('/order');
+  //       }
+  //     } catch (error) {
+  //       console.error('Error creating order:', error);
+  //     }
+  //   }
+  // };
+
   const handleOrder = async () => {
     validatePhone();
     validateAddress();
-  
+
     if (!phoneError && !addressError) {
+      setIsProcessing(true); // Bắt đầu hiệu ứng loading
       try {
-        // Chuẩn bị dữ liệu giỏ hàng
-        const cartItemsData = cartItems.map(item => ({
+        const cartItemsData = cartItems.map((item) => ({
           product_id: item.product.id,
           quantity: item.quantity,
           size_id: item.chooseSize.id || null,
         }));
-  
+
         const orderData = {
           payment_method: paymentMethod,
           address,
           sdt: phone,
           cart_items: cartItemsData,
         };
-  
-        // Gọi API để tạo đơn hàng
+
         const newOrder = await orderAPI.addOrder(orderData);
-        console.log(newOrder); // In ra thông tin đơn hàng
-  
-        // Lấy id và total_price từ response.order
-        const orderId = newOrder.id;           // Lấy ID đơn hàng
-        const orderTotalPrice = newOrder.total_price; // Lấy tổng giá trị đơn hàng
-  
-        // Nếu phương thức thanh toán là VNPAY, gọi API thanh toán
-        if (paymentMethod === 'VNPAY') {
+
+        const orderId = newOrder.id;
+        const orderTotalPrice = newOrder.total_price;
+
+        if (paymentMethod === "VNPAY") {
           try {
             const vnpayUrl = await orderAPI.vnpayPayment({
-              id: orderId,       // ID đơn hàng
-              amount: orderTotalPrice, // Tổng tiền từ phản hồi API
+              id: orderId,
+              amount: orderTotalPrice,
             });
-  
+
             if (vnpayUrl) {
-              window.location.href = vnpayUrl; // Redirect đến URL thanh toán
+              setIsProcessing(false); // Tắt loading trước khi chuyển hướng
+              window.location.href = vnpayUrl;
             }
           } catch (paymentError) {
-            console.error('Error during VNPAY payment:', paymentError.message);
+            console.error("Error during VNPAY payment:", paymentError.message);
           }
         } else {
-          // Nếu không phải VNPAY, điều hướng đến trang "order"
-          history.push('/order');
+          setIsProcessing(false); // Tắt loading trước khi điều hướng
+          history.push("/order");
         }
       } catch (error) {
-        console.error('Error creating order:', error);
+        setIsProcessing(false); // Tắt loading khi có lỗi
+        console.error("Error creating order:", error);
       }
     }
   };
-  
-  
-
 
 
   const validatePhone = () => {
@@ -181,224 +228,236 @@ const Cart = () => {
   };
 
 
-    return (
-      <>
-        <Helmet>
-          <title>Reno - Cart</title>
-          <meta name="description" content="Helmet application" />
-        </Helmet>
-        <CustomerLayout>
-          {cartItems?.length > 0 ? (
-            <Box className={classes.list}>
-              <Typography component="h3" className={classes.headingCart}>
-                Giỏ hàng
-              </Typography>
-              <TableContainer
-                component={Paper}
-                elevation={0}
-                style={{ marginBottom: 25 }}
-              >
-                <Table className={classes.table} aria-label="simple table">
-                  <TableHead>
-                    <TableRow>
-                      <TableCell className={classes.tableHead}>
-                        Sản phẩm
+  return (
+    <>
+      <Helmet>
+        <title>Reno - Cart</title>
+        <meta name="description" content="Helmet application" />
+      </Helmet>
+      <CustomerLayout>
+        {cartItems?.length > 0 ? (
+          <Box className={classes.list}>
+            <Typography component="h3" className={classes.headingCart}>
+              Giỏ hàng
+            </Typography>
+            <TableContainer
+              component={Paper}
+              elevation={0}
+              style={{ marginBottom: 25 }}
+            >
+              <Table className={classes.table} aria-label="simple table">
+                <TableHead>
+                  <TableRow>
+                    <TableCell className={classes.tableHead}>
+                      Sản phẩm
+                    </TableCell>
+                    <TableCell align="center" className={classes.tableHead}>
+                      Kích thước
+                    </TableCell>
+                    <TableCell align="center" className={classes.tableHead}>
+                      Giá
+                    </TableCell>
+                    <TableCell align="center" className={classes.tableHead}>
+                      Số lượng
+                    </TableCell>
+                    <TableCell align="center" className={classes.tableHead}>
+                      Tổng
+                    </TableCell>
+                    <TableCell align="center" className={classes.tableHead}>
+                      Xóa
+                    </TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {cartItems.map((product) => (
+                    <TableRow key={nanoid()} className={classes.tableROw}>
+                      <TableCell
+                        component="th"
+                        scope="row"
+                        className={classes.cellProduct}
+                        style={{ justifyContent: "flex-start" }}
+                      >
+                        <img
+                          src={product.product.images[0]}
+                          alt="product"
+                          className={classes.imgProduct}
+                        />
+                        <Typography component="span">
+                          {product.product.name}
+                        </Typography>
                       </TableCell>
-                      <TableCell align="center" className={classes.tableHead}>
-                        Kích thước
+                      <TableCell align="center">
+                        {product.chooseSize.name}
                       </TableCell>
-                      <TableCell align="center" className={classes.tableHead}>
-                        Giá
+                      <TableCell align="center">
+                        {new Intl.NumberFormat("vi-VN").format(
+                          product.product.price
+                        )}{" "}
+                        VND
                       </TableCell>
-                      <TableCell align="center" className={classes.tableHead}>
-                        Số lượng
-                      </TableCell>
-                      <TableCell align="center" className={classes.tableHead}>
-                        Tổng
-                      </TableCell>
-                      <TableCell align="center" className={classes.tableHead}>
-                        Xóa
-                      </TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {cartItems.map((product) => (
-                      <TableRow key={nanoid()} className={classes.tableROw}>
-                        <TableCell
-                          component="th"
-                          scope="row"
-                          className={classes.cellProduct}
-                          style={{ justifyContent: "flex-start" }}
-                        >
-                          <img
-                            src={product.product.images[0]}
-                            alt="product"
-                            className={classes.imgProduct}
+                      <TableCell align="center">
+                        <Box className={classes.quantity}>
+                          <BiMinus
+                            onClick={() => handleDecreaseQuantity(product)}
+                            style={{ cursor: "pointer" }}
                           />
                           <Typography component="span">
-                            {product.product.name}
+                            {product.quantity}
                           </Typography>
-                        </TableCell>
-                        <TableCell align="center">
-                          {product.chooseSize.name}
-                        </TableCell>
-                        <TableCell align="center">
-                          {new Intl.NumberFormat("vi-VN").format(
-                            product.product.price
-                          )}{" "}
-                          VND
-                        </TableCell>
-                        <TableCell align="center">
-                          <Box className={classes.quantity}>
-                            <BiMinus
-                              onClick={() => handleDecreaseQuantity(product)}
-                              style={{ cursor: "pointer" }}
-                            />
-                            <Typography component="span">
-                              {product.quantity}
-                            </Typography>
-                            <BiPlus
-                              onClick={() => handleIncreaseQuantity(product)}
-                              style={{
-                                cursor: "pointer",
-                              }}
-                            />
-                          </Box>
-                        </TableCell>
-                        <TableCell align="center">
-                          {new Intl.NumberFormat("vi-VN").format(
-                            product.quantity * product.product.price
-                          )}{" "}
-                          VND
-                        </TableCell>
-                        <TableCell align="center">
-                          <BiX
-                            onClick={() => handleDeleteProduct(product)}
-                            style={{ cursor: "pointer", fontSize: 20 }}
+                          <BiPlus
+                            onClick={() => handleIncreaseQuantity(product)}
+                            style={{
+                              cursor: "pointer",
+                            }}
                           />
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-              <Box className={classes.proceed}>
-                <Button component={Link} to="/" className={classes.continue}>
-                  Tiếp tục mua sắm
-                </Button>
-                <Box className={classes.checkout}>
-                  <Typography>
-                    Tổng: {new Intl.NumberFormat("vi-VN").format(total)} VND
-                  </Typography>
-                  <Button
+                        </Box>
+                      </TableCell>
+                      <TableCell align="center">
+                        {new Intl.NumberFormat("vi-VN").format(
+                          product.quantity * product.product.price
+                        )}{" "}
+                        VND
+                      </TableCell>
+                      <TableCell align="center">
+                        <BiX
+                          onClick={() => handleDeleteProduct(product)}
+                          style={{ cursor: "pointer", fontSize: 20 }}
+                        />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+            <Box className={classes.proceed}>
+              <Button component={Link} to="/" className={classes.continue}>
+                Tiếp tục mua sắm
+              </Button>
+              <Box className={classes.checkout}>
+                <Typography>
+                  Tổng: {new Intl.NumberFormat("vi-VN").format(total)} VND
+                </Typography>
+                {/* <Button
                     onClick={handleOrder}
                       name ="redirect"
                     className={classes.checkoutBtn}
                   >
                     Thanh toán
-                  </Button>
-                </Box>
-              </Box>
-              {/* Right side: Payment method */}
-              <Box className={classes.container}>
-                {/* Left section: Phone and Address */}
-                <Box className={classes.leftSection}>
-                  <Box className={classes.formGroup}>
-                    <Typography className={classes.formLabel}>Số điện thoại</Typography>
-                    <input
-                      type="text"
-                      placeholder="Nhập số điện thoại"
-                      className={classes.inputField}
-                      value={phone}
-                      onChange={handlePhoneChange}
-                      onBlur={validatePhone} // Kiểm tra khi người dùng rời khỏi trường
-                    />
-                    {phoneError && <Typography className={classes.errorText}>{phoneError}</Typography>}
-                  </Box>
-
-                  <Box className={classes.formGroup}>
-                    <Typography className={classes.formLabel}>Địa chỉ giao hàng</Typography>
-                    <input
-                      type="text"
-                      placeholder="Nhập địa chỉ giao hàng"
-                      className={classes.inputField}
-                      value={address}
-                      onChange={handleAddressChange}
-                      onBlur={validateAddress} // Kiểm tra khi người dùng rời khỏi trường
-                    />
-                    {addressError && <Typography className={classes.errorText}>{addressError}</Typography>}
-                  </Box>
-                </Box>
-
-                {/* Center section: Payment method and actions */}
-
-                <Box className={classes.centerSection}>
-                  <Box className={classes.formGroup}>
-                    <Typography className={classes.formLabel}>Phương thức thanh toán</Typography>
-                    <Box className={classes.paymentMethods}>
-                      <Box
-                        className={`${classes.paymentMethod} ${paymentMethod === 'Tiền mặt' ? classes.selected : ''}`}
-                        onClick={() => setPaymentMethod('Tiền mặt')}
-                      >
-                        <img
-                          src="https://luathongbang.com.vn/wp-content/uploads/2021/12/thanh-toan-tien-mat-e1573618010533.jpg"
-                          alt="Thanh toán khi nhận hàng"
-                          className={classes.paymentImage}
-                        />
-                        <Typography>Tiền mặt</Typography>
-                      </Box>
-                      <Box
-                        className={`${classes.paymentMethod} ${paymentMethod === 'VNPAY' ? classes.selected : ''}`}
-                        onClick={() => setPaymentMethod('VNPAY')}
-
-                      >
-                        <img
-                          src="https://stcd02206177151.cloud.edgevnpay.vn/assets/images/logo-icon/logo-primary.svg"
-                          alt="VNPAY"
-                          className={classes.paymentImage}
-                        />
-
-                        <Typography>VNPAY</Typography>
-                      </Box>
-                      <Box
-                        className={`${classes.paymentMethod} ${paymentMethod === 'Thẻ ngân hàng' ? classes.selected : ''}`}
-                        onClick={() => setPaymentMethod('Thẻ ngân hàng')}
-                      >
-                        <img
-                          src="https://cdn-gop.garenanow.com/webmain/static/payment_center/vn/menu/vn_new_atm_140x87.png"
-                          alt="Thẻ ngân hàng"
-                          className={classes.paymentImage}
-                        />
-                        <Typography>Ngân hàng</Typography>
-                      </Box>
-                    </Box>
-                  </Box>
-
-                </Box>
-              </Box>
-
-            </Box>
-          ) : (
-            <Box className={classes.notFound}>
-              <Hidden mdDown implementation="js">
-                <Box className={classes.imgContainer}>
-                  <img src={bgCart} alt="not-found" className={classes.img} />
-                </Box>
-              </Hidden>
-              <Box className={classes.content}>
-                <Typography className={classes.heading} component="h2">
-                  Không có sản phẩm nào trong giỏ hàng
-                </Typography>
-                <Button component={Link} to="/" className={classes.action}>
-                  Đi mua sắm
-                  <BiRightArrowAlt className={classes.redirectIcon} />
+                  </Button> */}
+                <Button
+                  onClick={handleOrder}
+                  className={classes.checkoutBtn}
+                  name ="redirect"
+                  disabled={isProcessing} // Vô hiệu hóa nút khi đang xử lý
+                >
+                  {isProcessing ? (
+                    <CircularProgress size={24} color="inherit" />
+                  ) : (
+                    "Thanh toán"
+                  )}
                 </Button>
               </Box>
             </Box>
-          )}
-        </CustomerLayout>
-      </>
-    );
-  };
+            {/* Right side: Payment method */}
+            <Box className={classes.container}>
+              {/* Left section: Phone and Address */}
+              <Box className={classes.leftSection}>
+                <Box className={classes.formGroup}>
+                  <Typography className={classes.formLabel}>Số điện thoại</Typography>
+                  <input
+                    type="text"
+                    placeholder="Nhập số điện thoại"
+                    className={classes.inputField}
+                    value={phone}
+                    onChange={handlePhoneChange}
+                    onBlur={validatePhone} // Kiểm tra khi người dùng rời khỏi trường
+                  />
+                  {phoneError && <Typography className={classes.errorText}>{phoneError}</Typography>}
+                </Box>
 
-  export default Cart;
+                <Box className={classes.formGroup}>
+                  <Typography className={classes.formLabel}>Địa chỉ giao hàng</Typography>
+                  <input
+                    type="text"
+                    placeholder="Nhập địa chỉ giao hàng"
+                    className={classes.inputField}
+                    value={address}
+                    onChange={handleAddressChange}
+                    onBlur={validateAddress} // Kiểm tra khi người dùng rời khỏi trường
+                  />
+                  {addressError && <Typography className={classes.errorText}>{addressError}</Typography>}
+                </Box>
+              </Box>
+
+              {/* Center section: Payment method and actions */}
+
+              <Box className={classes.centerSection}>
+                <Box className={classes.formGroup}>
+                  <Typography className={classes.formLabel}>Phương thức thanh toán</Typography>
+                  <Box className={classes.paymentMethods}>
+                    <Box
+                      className={`${classes.paymentMethod} ${paymentMethod === 'Tiền mặt' ? classes.selected : ''}`}
+                      onClick={() => setPaymentMethod('Tiền mặt')}
+                    >
+                      <img
+                        src="https://luathongbang.com.vn/wp-content/uploads/2021/12/thanh-toan-tien-mat-e1573618010533.jpg"
+                        alt="Thanh toán khi nhận hàng"
+                        className={classes.paymentImage}
+                      />
+                      <Typography>Tiền mặt</Typography>
+                    </Box>
+                    <Box
+                      className={`${classes.paymentMethod} ${paymentMethod === 'VNPAY' ? classes.selected : ''}`}
+                      onClick={() => setPaymentMethod('VNPAY')}
+
+                    >
+                      <img
+                        src="https://stcd02206177151.cloud.edgevnpay.vn/assets/images/logo-icon/logo-primary.svg"
+                        alt="VNPAY"
+                        className={classes.paymentImage}
+                      />
+
+                      <Typography>VNPAY</Typography>
+                    </Box>
+                    <Box
+                      className={`${classes.paymentMethod} ${paymentMethod === 'Thẻ ngân hàng' ? classes.selected : ''}`}
+                      onClick={() => setPaymentMethod('Thẻ ngân hàng')}
+                    >
+                      <img
+                        src="https://cdn-gop.garenanow.com/webmain/static/payment_center/vn/menu/vn_new_atm_140x87.png"
+                        alt="Thẻ ngân hàng"
+                        className={classes.paymentImage}
+                      />
+                      <Typography>Ngân hàng</Typography>
+                    </Box>
+                  </Box>
+                </Box>
+
+              </Box>
+            </Box>
+
+          </Box>
+        ) : (
+          <Box className={classes.notFound}>
+            <Hidden mdDown implementation="js">
+              <Box className={classes.imgContainer}>
+                <img src={bgCart} alt="not-found" className={classes.img} />
+              </Box>
+            </Hidden>
+            <Box className={classes.content}>
+              <Typography className={classes.heading} component="h2">
+                Không có sản phẩm nào trong giỏ hàng
+              </Typography>
+              <Button component={Link} to="/" className={classes.action}>
+                Đi mua sắm
+                <BiRightArrowAlt className={classes.redirectIcon} />
+              </Button>
+            </Box>
+          </Box>
+        )}
+      </CustomerLayout>
+    </>
+  );
+};
+
+export default Cart;
