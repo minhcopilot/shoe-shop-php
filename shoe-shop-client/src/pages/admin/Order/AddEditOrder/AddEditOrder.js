@@ -7,48 +7,44 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import orderAPI from "../../../../api/orderApi";  // Đảm bảo đường dẫn đúng
 import { useStyles } from "./styles";
+import { CircularProgress } from "@material-ui/core";
 
 const AddEditOrder = ({ open, handleClose, order = {}, updateSuccess }) => {
   const classes = useStyles();
-  const {  reset } = useForm();
+  const { reset } = useForm();
   const [error, setError] = useState("");
   const [formData, setFormData] = useState({
     status: order?.status || "", // Khởi tạo trạng thái
   });
-  const [modalOpen, setModalOpen] = useState(open);  // Trạng thái mở modal
+  const [modalOpen, setModalOpen] = useState(open);
+  const [isProcessing, setIsProcessing] = useState(false);  // Trạng thái mở modal
 
   // Hàm để cập nhật trạng thái đơn hàng
   const handleEditOrder = async (data) => {
-    // Kiểm tra nếu `order` hoặc `order.id` không hợp lệ
-    if (!order?.id) {
-      setError("ID đơn hàng không hợp lệ.");
-      return;
-    }
-  
-    console.log("Order ID:", order.id); // In ra ID đơn hàng
-    console.log("Form Status:", formData.status); // In ra status được chọn từ form
-  
+    setIsProcessing(true);
     try {
       // Gọi API updateOrder với id đơn hàng và status mới
       const updatedOrder = await orderAPI.updateOrderStatus(order.id, {
         status: formData.status, // Sử dụng status từ formData thay vì từ data
       });
-  
+
       // Kiểm tra nếu updatedOrder hợp lệ
       if (updatedOrder && updatedOrder.id) {
         // Cập nhật lại UI sau khi thành công
         updateSuccess(updatedOrder); // Giả sử bạn cần cập nhật lại danh sách đơn hàng hoặc làm mới UI
       } else {
         setError("Cập nhật không thành công, không có dữ liệu trả về.");
+       
       }
-  
-      // Đóng modal và reset form
+
+
+      // Đóng modal và reset 
       setModalOpen(false);  // Đóng modal
       setError("");  // Reset lỗi
       setFormData({
         status: updatedOrder.status, // Cập nhật lại formData sau khi cập nhật
       });
-  
+
       // Thông báo thành công
       toast.success("Cập nhật đơn hàng thành công", {
         position: "bottom-center",
@@ -57,17 +53,20 @@ const AddEditOrder = ({ open, handleClose, order = {}, updateSuccess }) => {
         closeOnClick: true,
         pauseOnHover: true,
         draggable: true,
+        
       });
-  
+      
+
       // Reset form khi đóng modal
       reset();
-  
+
     } catch (error) {
       console.error("Error during update:", error);
       setError(error?.response?.data?.message || "Cập nhật không thành công");
+      
     }
   };
-  
+
 
   // Hàm xử lý khi người dùng thay đổi trạng thái
   const handleStatusChange = (e) => {
@@ -115,8 +114,14 @@ const AddEditOrder = ({ open, handleClose, order = {}, updateSuccess }) => {
               <MenuItem value="Thành công">Thành công</MenuItem>
             </TextField>
             {error && <Typography className={classes.error}>{error}</Typography>}
-            <Button className={classes.save} type="submit">
-              Lưu
+            <Button className={classes.save} type="submit"
+              disabled={isProcessing}
+            >
+              {isProcessing ? (
+                <CircularProgress size={24} style={{ color: "white" }} />
+              ) : (
+                "Lưu"
+              )}
             </Button>
           </form>
         </Fade>

@@ -23,6 +23,8 @@ import orderAPI from "../../../api/orderApi";
 import { useStyles } from "./styles";
 import CloseIcon from '@material-ui/icons/Close';
 
+import { CircularProgress } from "@material-ui/core";
+
 const Order = () => {
   const classes = useStyles();
   const [orders, setOrders] = useState([]);
@@ -35,16 +37,20 @@ const Order = () => {
   const [openDetailModal, setOpenDetailModal] = useState(false); // Separate modal for details
   const [currentOrder, setCurrentOrder] = useState(null);
 
+  const [loading, setLoading] = useState(true); // Trạng thái loading
 
   // Fetch all orders on initial load
   useEffect(() => {
     const fetchOrders = async () => {
       try {
+        setLoading(true); // Bắt đầu tải
         const ordersFromAPI = await orderAPI.getAllOrders();
         setOrders(ordersFromAPI);
         setFilteredOrders(ordersFromAPI);
+        setLoading(false); // Đã tải xong
       } catch (error) {
         console.error("Lỗi khi lấy danh sách đơn hàng:", error);
+        setLoading(false); // Đã tải xong
       }
     };
     fetchOrders();
@@ -111,16 +117,19 @@ const Order = () => {
   };
 
   const handleOrderDetailClick = async (orderId) => {
+    setLoading(true);
     try {
       const response = await orderAPI.getOrderDetailForAdmin(orderId);
       if (!response || !response.order) {
         console.error("Không có dữ liệu đơn hàng");
         return;
       }
+      setLoading(false);
       setCurrentOrder(response.order);
       setOpenDetailModal(true);
     } catch (error) {
       console.error("Lỗi khi lấy chi tiết đơn hàng:", error.message);
+      setLoading(false);
     }
   };
 
@@ -151,8 +160,15 @@ const Order = () => {
         >
           lịch sử thanh toán
         </Button>
-
-
+        
+        {loading ? (
+            <Box display="flex" justifyContent="center" alignItems="center" height="200px">
+              <CircularProgress />
+              <Typography variant="h6" style={{ marginLeft: "20px" }}>
+                Đang tải ...
+              </Typography>
+            </Box>
+          ) : (
         <TableContainer component={Paper}>
           <Table>
             <TableHead>
@@ -165,7 +181,8 @@ const Order = () => {
                 <TableCell align="center">Thao tác</TableCell>
               </TableRow>
             </TableHead>
-            <TableBody>
+            
+            <TableBody>         
               {filteredOrders.map((order) => (
                 <TableRow key={order.id}>
                   <TableCell
@@ -212,10 +229,14 @@ const Order = () => {
                     )}
                   </TableCell>
                 </TableRow>
+                
               ))}
             </TableBody>
+           
           </Table>
         </TableContainer>
+      )}
+          
 
         {updateOrder && (
           <AddEditOrder
