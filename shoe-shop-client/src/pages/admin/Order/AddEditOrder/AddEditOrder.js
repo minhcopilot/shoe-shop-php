@@ -30,7 +30,7 @@ const AddEditOrder = ({ open, handleClose, order = {}, updateSuccess }) => {
   
     try {
       // Gọi API updateOrder với id đơn hàng và status mới
-      const updatedOrder = await orderAPI.updateOrder(order.id, {
+      const updatedOrder = await orderAPI.updateOrderStatus(order.id, {
         status: formData.status, // Sử dụng status từ formData thay vì từ data
       });
   

@@ -188,14 +188,14 @@ const useStyles = makeStyles((theme) => ({
 
 
 
-	////thanh toan 
+	//thanh toan 
 	modal: {
 		display: "flex",
 		justifyContent: "center",
 		alignItems: "center",
 		backdropFilter: "blur(10px)",
-	  },
-	  modalContent: {
+	},
+	modalContent: {
 		backgroundColor: "#fff",
 		padding: "20px",
 		borderRadius: "8px",
@@ -205,94 +205,175 @@ const useStyles = makeStyles((theme) => ({
 		display: "flex",
 		flexDirection: "column",
 		boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-	  },
-	  modalCard: {
+	},
+	modalCard: {
 		backgroundColor: "#fafafa",
 		borderRadius: "8px",
 		padding: "20px",
 		display: "flex",
 		flexDirection: "column",
 		height: "100%",
-	  },
-	  modalTitle: {
+	},
+	modalTitle: {
 		fontSize: "24px",
 		fontWeight: "bold",
 		marginBottom: "15px",
 		textAlign: "center",
-	  },
-	  modalBody: {
+	},
+	modalBody: {
 		flex: 1,
 		maxHeight: "120px", // Giới hạn chiều cao của danh sách sản phẩm
 		overflowY: "auto", // Cho phép cuộn dọc
 		marginBottom: "5px",
 		paddingRight: "10px",
-	  },
-	  productItem: {
+	},
+	productItem: {
 		marginBottom: "15px",
 		paddingBottom: "10px",
 		borderBottom: "1px solid #ddd",
-	  },
-	  productInfo: {
+	},
+	productInfo: {
 		display: "flex",
 		alignItems: "center",
 		justifyContent: "space-between",
 		marginBottom: "10px",
-	  },
-	  productImg: {
+	},
+	productImg: {
 		width: "50px",
 		height: "50px",
 		marginRight: "10px",
-	  },
-	  productName: {
+	},
+	productName: {
 		fontWeight: "bold",
 		fontSize: "16px",
 		flexGrow: 1,
-	  },
-	  productSize: {
+	},
+	productSize: {
 		fontSize: "14px",
 		color: "#555",
 		marginLeft: "10px",
-	  },
-	  productDetails: {
+	},
+	productDetails: {
 		display: "flex",
 		justifyContent: "space-between",
 		fontSize: "14px",
 		color: "#555",
-	  },
-	  paymentForm: {
+	},
+	paymentForm: {
 		marginTop: "20px",
 		flexShrink: 0,
-	  },
-	  formGroup: {
+	},
+	formGroup: {
 		marginBottom: "15px",
-	  },
-	  selectInput: {
+	},
+	selectInput: {
 		width: "100%",
 		padding: "10px",
 		borderRadius: "5px",
 		border: "1px solid #ddd",
 		marginTop: "5px",
-	  },
-	  textInput: {
+	},
+	textInput: {
 		width: "100%",
 		padding: "10px",
 		borderRadius: "5px",
 		border: "1px solid #ddd",
 		marginTop: "5px",
-	  },
-	 
-	  modalFooter: {
+	},
+
+
+
+	modalFooter: {
 		display: 'flex',
 		alignItems: 'center',
 		justifyContent: 'flex-end',  // Đảm bảo nút thanh toán căn phải
-	  },
-	  totalAmount: {
+	},
+	totalAmount: {
 		display: 'flex',
 		justifyContent: 'space-between', // Tổng tiền nằm bên trái, nút thanh toán bên phải
 		alignItems: 'center',
 		marginBottom: '5px', // Khoảng cách dưới
+	},
+
+	container: {
+		display: 'flex',
+		justifyContent: 'space-between',
+		marginTop: '30px',
+		width: '100%',
 	  },
-	 
+	  leftSection: {
+		flex: 2,
+		display: 'flex',
+		flexDirection: 'column',
+		gap: '20px',
+	  },
+	  centerSection: {
+		flex: 1,
+		display: 'flex',
+		flexDirection: 'column',
+		alignItems: 'center',
+		gap: '20px',
+	  },
+	  rightSection: {
+		flex: 1,
+		display: 'flex',
+		flexDirection: 'column',
+		alignItems: 'center',
+	  },
+	  formGroup: {
+		display: 'flex',
+		flexDirection: 'column',
+		gap: '5px',
+	  },
+	  formLabel: {
+		fontWeight: 'bold',
+	  },
+	  inputField: {
+		width: '100%',
+		height: '50px',
+		border: '1px solid #ccc',
+		borderRadius: '4px',
+	  },
+	  paymentMethods: {
+		display: 'flex',
+		flexDirection: 'column',
+		gap: '10px',
+	  },
+	  paymentMethod: {
+		display: 'flex',
+		alignItems: 'center',
+		gap: '10px',
+		padding: '10px',
+		cursor: 'pointer',
+		borderRadius: '4px',
+		border: '1px solid #ccc',
+		transition: 'background-color 0.3s',
+	  },
+	  selected: {
+		backgroundColor: '#f0f0f0',
+	  },
+	  paymentImage: {
+		width: '30px',
+		height: '30px',
+	  },
+	  loadingContainer: {
+		display: 'flex',
+		flexDirection: 'column',
+		alignItems: 'center',
+		gap: '10px',
+	  },
+	  qrCodeContainer: {
+		textAlign: 'center',
+	  },
+	  paymentCompleteContainer: {
+		textAlign: 'center',
+	  },
+	  errorText: {
+		color: 'red',
+		fontSize: '0.9rem',
+		marginTop: '5px',
+	  },
+
 }))
 
 export { useStyles }

@@ -21,6 +21,9 @@ import { useStyles } from "./styles";
 import orderAPI from "../../../api/orderApi";
 import CloseIcon from '@material-ui/icons/Close';
 
+import { toast, ToastContainer } from "react-toastify"; // Import react-toastify
+import "react-toastify/dist/ReactToastify.css"; // Import the styles
+import Swal from 'sweetalert2';
 
 const Order = () => {
   const classes = useStyles();
@@ -42,45 +45,78 @@ const Order = () => {
       const data = await orderAPI.getAllOrders();
       setOrders(data);
     } catch (error) {
-      console.error("Error fetching orders:", error);
+      toast.error("Lỗi khi tải danh sách đơn hàng!");
     }
   };
 
-  // Cancel order
-  const handleCancelOrder = async (orderId) => {
-    if (!window.confirm("Bạn có chắc chắn muốn huỷ đơn hàng này không?")) return;
-    try {
-      await orderAPI.deleteOrder(orderId); // Assuming you have a cancelOrder API
-      setOrders(orders.filter((order) => order.id !== orderId));
-      alert("Huỷ đơn hàng thành công!");
-    } catch (error) {
-      console.error("Error cancelling order:", error);
-      alert("Không thể huỷ đơn hàng.");
-    }
-  };
+
+// Handle cancel order
+const handleCancelOrder = async (orderId) => {
+  const result = await Swal.fire({
+    title: 'Bạn có chắc chắn muốn huỷ đơn hàng này không?',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Huỷ',
+    cancelButtonText: 'Hủy bỏ',
+  });
+
+  if (!result.isConfirmed) return;
+
+  try {
+    // Call API to update the order status
+    await orderAPI.updateOrderStatus(orderId, { status: 'Huỷ' });
+    
+    // Update the orders list without reloading the page
+    setOrders(prevOrders => prevOrders.filter(order => order.id !== orderId)); 
+    
+    toast.success("Đơn hàng đã được huỷ!");
+  } catch (error) {
+    console.error("Error cancelling order:", error);
+    toast.error("Không thể huỷ đơn hàng.");
+  }
+};
+
+// Handle delete order
+const handleDeleteOrder = async (orderId) => {
+  const result = await Swal.fire({
+    title: 'Bạn có chắc chắn muốn xoá đơn hàng này không?',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Xoá',
+    cancelButtonText: 'Hủy bỏ',
+  });
+
+  if (!result.isConfirmed) return;
+
+  try {
+    // Call API to delete the order
+    await orderAPI.deleteOrder(orderId);
+    
+    // Update the orders list without reloading the page
+    setOrders(prevOrders => prevOrders.filter(order => order.id !== orderId));
+    
+    toast.success("Đơn hàng đã bị xoá.");
+  } catch (error) {
+    console.error("Error deleting order:", error);
+    toast.error("Không thể xoá đơn hàng.");
+  }
+};
+
 
   const handleOrderDetailClick = async (orderId) => {
-    console.log("orderId:", orderId); // Log để kiểm tra giá trị orderId
     try {
-      const response = await orderAPI.getOrderDetail(orderId); // Gọi API
-
-
-      // Kiểm tra phản hồi hợp lệ và trả về chi tiết đơn hàng
+      const response = await orderAPI.getOrderDetail(orderId);
       if (!response || !response.order) {
         console.error("Không có dữ liệu đơn hàng");
         return;
       }
-
-      const order = response.order;
-      setCurrentOrder(order); // Lưu thông tin chi tiết đơn hàng vào state
-      setOpenDetailModal(true); // Mở modal hiển thị chi tiết đơn hàng
-
+      setCurrentOrder(response.order);
+      setOpenDetailModal(true);
     } catch (error) {
       console.error("Lỗi khi lấy chi tiết đơn hàng:", error.message);
     }
   };
 
-  // Open modal for editing order
   const openModalHandler = (order) => {
     setCurrentOrder(order);
     setFormData({
@@ -98,23 +134,21 @@ const Order = () => {
     try {
       if (currentOrder) {
         // Cập nhật cả địa chỉ và số điện thoại
-        await orderAPI.updateOrder(currentOrder.id, {
+        await orderAPI.updateOrderDetails(currentOrder.id, {
           address: formData.address,
           sdt: formData.sdt,  // Thêm sdt vào payload
         });
 
-        alert("Cập nhật thành công!");
+        toast.success("Cập nhật thành công!");
         setOpenModal(false);
         fetchOrders(); // Refresh danh sách đơn hàng
       }
     } catch (error) {
       console.error("Error submitting order:", error);
-      alert("Có lỗi xảy ra.");
+      toast.error("Có lỗi xảy ra khi cập nhật.");
     }
   };
 
-
-  // Get color based on order status
   const getStatusColor = (status) => {
     switch (status) {
       case "Chờ xác nhận":
@@ -126,7 +160,7 @@ const Order = () => {
       case "Huỷ":
         return "red";
       default:
-        return "grey"; // Default color for other statuses
+        return "grey";
     }
   };
 
@@ -181,18 +215,14 @@ const Order = () => {
                       onClick={() => handleOrderDetailClick(order.id)}
                       style={{
                         cursor: "pointer",
-                        textDecoration: "none", // Default, no underline
                         color: "blue",
                         transition: "text-decoration 0.3s ease",
-
                       }}
                       onMouseEnter={(e) => {
                         e.target.style.textDecoration = "underline";
-                        e.target.style.textDecorationColor = "blue";
-                        e.target.style.textDecorationThickness = "2px"; // Optional: Adjust thickness
                       }}
                       onMouseLeave={(e) => {
-                        e.target.style.textDecoration = "none"; // Remove underline on hover out
+                        e.target.style.textDecoration = "none";
                       }}
                     >
                       {order.id}
@@ -213,7 +243,7 @@ const Order = () => {
                       </Typography>
                     </TableCell>
                     <TableCell align="center">
-                      {order.status === "Chờ xác nhận" && (
+                      {order.status !== "Huỷ" && (
                         <>
                           <Button
                             variant="contained"
@@ -235,6 +265,18 @@ const Order = () => {
                           </Button>
                         </>
                       )}
+                      {order.status === "Huỷ" && (
+                        <Button
+                          variant="contained"
+                          style={{
+                            backgroundColor: "gray",
+                            color: "#fff",
+                          }}
+                          onClick={() => handleDeleteOrder(order.id)}
+                        >
+                          Xoá
+                        </Button>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -243,6 +285,7 @@ const Order = () => {
           </TableContainer>
         </Box>
 
+        {/* Modal for updating order */}
         <Modal open={openModal} onClose={() => setOpenModal(false)}>
           <Box
             className={classes.modal}
@@ -315,8 +358,6 @@ const Order = () => {
         </Modal>
 
         {/* Modal for order details */}
-
-
         <Modal open={openDetailModal} onClose={() => setOpenDetailModal(false)}>
           <Box
             style={{
@@ -463,7 +504,7 @@ const Order = () => {
                     {/* Ảnh sản phẩm */}
                     <Box style={{ flex: 1, display: "flex", justifyContent: "center" }}>
                       <img
-                        src={item.image} // Giả sử đây là đường dẫn ảnh
+                        src={item.image && item.image.length > 0 ? item.image[0] : "default-image.jpg"} // Fallback image if no image
                         alt={item.product_name}
                         style={{
                           width: "80px", // Giới hạn kích thước ảnh
@@ -496,10 +537,11 @@ const Order = () => {
             </Box>
           </Box>
         </Modal>
-
+        <ToastContainer />
       </CustomerLayout>
     </>
   );
 };
 
 export default Order;
+

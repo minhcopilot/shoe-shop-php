@@ -17,7 +17,7 @@ class Order extends Model
         'address',
         'sdt'
     ];
-    
+
 
     protected $casts = [
         'total_price' => 'decimal:2'
@@ -32,6 +32,4 @@ class Order extends Model
     {
         return $this->hasMany(OrderItem::class);
     }
-
-    
 }
