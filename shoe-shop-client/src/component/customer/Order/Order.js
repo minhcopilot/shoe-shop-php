@@ -104,26 +104,29 @@ const Order = () => {
       // Update the orders list without reloading the page
       setOrders(prevOrders => prevOrders.filter(order => order.id !== orderId));
       toast.success("Đơn hàng đã bị xoá.");
-      setLoading(false)
+      setLoading(false);
     } catch (error) {
       console.error("Error deleting order:", error);
       toast.error("Không thể xoá đơn hàng.");
-      setLoading(false)
+      setLoading(false);
     }
   };
 
 
   const handleOrderDetailClick = async (orderId) => {
+    setLoading(true);
     try {
       const response = await orderAPI.getOrderDetail(orderId);
       if (!response || !response.order) {
         console.error("Không có dữ liệu đơn hàng");
         return;
       }
+      setLoading(false);
       setCurrentOrder(response.order);
       setOpenDetailModal(true);
     } catch (error) {
       console.error("Lỗi khi lấy chi tiết đơn hàng:", error.message);
+      setLoading(false);
     }
   };
 
@@ -207,23 +210,8 @@ const Order = () => {
     }
   };
 
-  const validatePhone = () => {
-    if (!phone.trim()) {
-      setPhoneError('Vui lòng điền số điện thoại.');
-    } else if (phone.length !== 10 || !/^\d{10}$/.test(phone)) {
-      setPhoneError('Số điện thoại phải có đúng 10 chữ số.');
-    } else {
-      setPhoneError('');
-    }
-  };
-
-  const validateAddress = () => {
-    if (!address.trim()) {
-      setAddressError('Vui lòng điền địa chỉ.');
-    } else {
-      setAddressError('');
-    }
-  };
+ 
+  
   
 
   useEffect(() => {
@@ -245,7 +233,7 @@ const Order = () => {
             <Box display="flex" justifyContent="center" alignItems="center" height="200px">
               <CircularProgress />
               <Typography variant="h6" style={{ marginLeft: "20px" }}>
-                Đang tải danh sách đơn hàng...
+                Đang tải ...
               </Typography>
             </Box>
           ) : (

@@ -84,64 +84,66 @@ class OrderController extends Controller
     }
     public function vnpayPayment(Request $request)
     {
-    $vnp_Url = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
-    $vnp_Returnurl = "http://localhost:3000/order";
-    $vnp_TmnCode = "W08PXQHX";//Mã website tại VNPAY 
-    $vnp_HashSecret = "V512UALWT3CCQG8L6KYQUWPEL0Y8T2E3"; //Chuỗi bí mật
+        $vnp_Url = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
+        $vnp_Returnurl = "http://localhost:3000/order";
+        $vnp_TmnCode = "W08PXQHX"; //Mã website tại VNPAY 
+        $vnp_HashSecret = "V512UALWT3CCQG8L6KYQUWPEL0Y8T2E3"; //Chuỗi bí mật
 
-    $vnp_TxnRef = $request->id; //Mã đơn hàng. Trong thực tế Merchant cần insert đơn hàng vào DB và gửi mã này sang VNPAY
-    $vnp_OrderInfo = 'thanh toán đơn hàng';
-    $vnp_OrderType = 'billpayment';
-    $vnp_Amount = $request->amount * 100;
-    $vnp_Locale = 'VN';
-    $vnp_BankCode = 'NCB';
-    $vnp_IpAddr = $_SERVER['REMOTE_ADDR'];
+        $vnp_TxnRef = $request->id; //Mã đơn hàng. Trong thực tế Merchant cần insert đơn hàng vào DB và gửi mã này sang VNPAY
+        $vnp_OrderInfo = 'thanh toán đơn hàng';
+        $vnp_OrderType = 'billpayment';
+        $vnp_Amount = $request->amount * 100;
+        $vnp_Locale = 'VN';
+        $vnp_BankCode = 'NCB';
+        $vnp_IpAddr = $_SERVER['REMOTE_ADDR'];
 
-    $inputData = array(
-        "vnp_Version" => "2.1.0",
-        "vnp_TmnCode" => $vnp_TmnCode,
-        "vnp_Amount" => $vnp_Amount,
-        "vnp_Command" => "pay",
-        "vnp_CreateDate" => date('YmdHis'),
-        "vnp_CurrCode" => "VND",
-        "vnp_IpAddr" => $vnp_IpAddr,
-        "vnp_Locale" => $vnp_Locale,
-        "vnp_OrderInfo" => $vnp_OrderInfo,
-        "vnp_OrderType" => $vnp_OrderType,
-        "vnp_ReturnUrl" => $vnp_Returnurl,
-        "vnp_TxnRef" => $vnp_TxnRef,
-    );
+        $inputData = array(
+            "vnp_Version" => "2.1.0",
+            "vnp_TmnCode" => $vnp_TmnCode,
+            "vnp_Amount" => $vnp_Amount,
+            "vnp_Command" => "pay",
+            "vnp_CreateDate" => date('YmdHis'),
+            "vnp_CurrCode" => "VND",
+            "vnp_IpAddr" => $vnp_IpAddr,
+            "vnp_Locale" => $vnp_Locale,
+            "vnp_OrderInfo" => $vnp_OrderInfo,
+            "vnp_OrderType" => $vnp_OrderType,
+            "vnp_ReturnUrl" => $vnp_Returnurl,
+            "vnp_TxnRef" => $vnp_TxnRef,
+        );
 
-    if (isset($vnp_BankCode) && $vnp_BankCode != "") {
-        $inputData['vnp_BankCode'] = $vnp_BankCode;
-    }
-    if (isset($vnp_Bill_State) && $vnp_Bill_State != "") {
-        $inputData['vnp_Bill_State'] = $vnp_Bill_State;
-    }
-
-    //var_dump($inputData);
-    ksort($inputData);
-    $query = "";
-    $i = 0;
-    $hashdata = "";
-    foreach ($inputData as $key => $value) {
-        if ($i == 1) {
-            $hashdata .= '&' . urlencode($key) . "=" . urlencode($value);
-        } else {
-            $hashdata .= urlencode($key) . "=" . urlencode($value);
-            $i = 1;
+        if (isset($vnp_BankCode) && $vnp_BankCode != "") {
+            $inputData['vnp_BankCode'] = $vnp_BankCode;
         }
-        $query .= urlencode($key) . "=" . urlencode($value) . '&';
-    }
+        if (isset($vnp_Bill_State) && $vnp_Bill_State != "") {
+            $inputData['vnp_Bill_State'] = $vnp_Bill_State;
+        }
 
-    $vnp_Url = $vnp_Url . "?" . $query;
-    if (isset($vnp_HashSecret)) {
-        $vnpSecureHash =   hash_hmac('sha512', $hashdata, $vnp_HashSecret);//  
-        $vnp_Url .= 'vnp_SecureHash=' . $vnpSecureHash;
-    }
-    $returnData = array('code' => '00'
-        , 'message' => 'success'
-        , 'data' => $vnp_Url);
+        //var_dump($inputData);
+        ksort($inputData);
+        $query = "";
+        $i = 0;
+        $hashdata = "";
+        foreach ($inputData as $key => $value) {
+            if ($i == 1) {
+                $hashdata .= '&' . urlencode($key) . "=" . urlencode($value);
+            } else {
+                $hashdata .= urlencode($key) . "=" . urlencode($value);
+                $i = 1;
+            }
+            $query .= urlencode($key) . "=" . urlencode($value) . '&';
+        }
+
+        $vnp_Url = $vnp_Url . "?" . $query;
+        if (isset($vnp_HashSecret)) {
+            $vnpSecureHash =   hash_hmac('sha512', $hashdata, $vnp_HashSecret); //  
+            $vnp_Url .= 'vnp_SecureHash=' . $vnpSecureHash;
+        }
+        $returnData = array(
+            'code' => '00',
+            'message' => 'success',
+            'data' => $vnp_Url
+        );
         if (isset($_POST['redirect'])) {
             header('Location: ' . $vnp_Url);
             die();
@@ -297,71 +299,41 @@ class OrderController extends Controller
         ]);
     }
 
-    // public function getOrderDetailForAdmin($orderId)
-    // {
-    //     $user = Auth::user();
 
-    //    // Tạo truy vấn cho tất cả các đơn hàng
-    // $query = Order::with('orderItems.product', 'orderItems.size'); // Tải thông tin sản phẩm và kích thước
-
-    // // Nếu không phải admin, chỉ cho phép xem đơn hàng của chính mình
-    // if (!$user->is_admin) {
-    //     $query->where('user_id', $user->id);
-    // }
-
-    // // Lấy thông tin đơn hàng theo ID
-    // $order = $query->findOrFail($orderId); // Nếu không tìm thấy đơn hàng thì trả về lỗi 404
-
-    // // Chuyển đổi các orderItems để hiển thị thông tin chi tiết về sản phẩm và kích thước
-    // $order->orderItems->transform(function ($item) {
-    //     $item->product_name = optional($item->product)->name;   // Thêm tên sản phẩm vào OrderItem
-    //     $item->size_name = optional($item->size)->name;         // Thêm tên kích thước vào OrderItem
-    //     $item->price = optional($item->product)->price;         // Thêm giá sản phẩm vào OrderItem
-    //     $item->image = optional($item->product->images);        // Thêm ảnh sản phẩm vào OrderItem
-    //     $item->quantity = $item->quantity;                      // Số lượng
-    //     $item->sdt = $item->sdt;                                // Số điện thoại (nếu có)
-    //     return $item;
-    // });
-
-    //     return response()->json([
-    //         'order' => $order,
-    //         'error' => false,
-    //     ]);
-    // }
 
     public function getOrderDetailForAdmin($orderId)
-{
-    $user = Auth::user();
+    {
+        $user = Auth::user();
 
-    // Tạo truy vấn cho tất cả các đơn hàng
-    $query = Order::with('orderItems.product', 'orderItems.size', 'user'); // Tải thông tin sản phẩm, kích thước và người dùng
+        // Tạo truy vấn cho tất cả các đơn hàng
+        $query = Order::with('orderItems.product', 'orderItems.size', 'user'); // Tải thông tin sản phẩm, kích thước và người dùng
 
-    // Nếu không phải admin, chỉ cho phép xem đơn hàng của chính mình
-    if (!$user->is_admin) {
-        $query->where('user_id', $user->id);
+        // Nếu không phải admin, chỉ cho phép xem đơn hàng của chính mình
+        if (!$user->is_admin) {
+            $query->where('user_id', $user->id);
+        }
+
+        // Lấy thông tin đơn hàng theo ID
+        $order = $query->findOrFail($orderId); // Nếu không tìm thấy đơn hàng thì trả về lỗi 404
+
+        // Chuyển đổi các orderItems để hiển thị thông tin chi tiết về sản phẩm và kích thước
+        $order->orderItems->transform(function ($item) {
+            $item->product_name = $item->product->name;   // Thêm tên sản phẩm vào OrderItem
+            $item->size_name = $item->size->name;          // Thêm tên kích thước vào OrderItem
+            $item->price = $item->product->price;          // Thêm giá sản phẩm vào OrderItem
+            $item->image = $item->product->images;          // Thêm ảnh sản phẩm vào OrderItem
+            $item->quantity = $item->quantity;
+            $item->sdt = $item->sdt;                            // Số điện thoại (nếu có)
+            return $item;
+        });
+
+        // Trả về thông tin chi tiết của đơn hàng và thông tin người dùng
+        return response()->json([
+            'order' => $order,
+            'user' => $order->user->name, // Lấy tên người dùng
+            'error' => false,
+        ]);
     }
-
-    // Lấy thông tin đơn hàng theo ID
-    $order = $query->findOrFail($orderId); // Nếu không tìm thấy đơn hàng thì trả về lỗi 404
-
-    // Chuyển đổi các orderItems để hiển thị thông tin chi tiết về sản phẩm và kích thước
-    $order->orderItems->transform(function ($item) {
-        $item->product_name = optional($item->product)->name;   // Thêm tên sản phẩm vào OrderItem
-        $item->size_name = optional($item->size)->name;         // Thêm tên kích thước vào OrderItem
-        $item->price = optional($item->product)->price;         // Thêm giá sản phẩm vào OrderItem
-        $item->image = optional($item->product->images);        // Thêm ảnh sản phẩm vào OrderItem
-        $item->quantity = $item->quantity;                      // Số lượng
-        $item->sdt = $item->sdt;                                // Số điện thoại (nếu có)
-        return $item;
-    });
-
-    // Trả về thông tin chi tiết của đơn hàng và thông tin người dùng
-    return response()->json([
-        'order' => $order,
-        'user' => $order->user->name, // Lấy tên người dùng
-        'error' => false,
-    ]);
-}
 
     // Delete Order
     public function deleteOrder($orderId)
