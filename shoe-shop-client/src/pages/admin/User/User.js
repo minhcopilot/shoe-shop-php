@@ -19,13 +19,12 @@ import { Helmet } from "react-helmet-async";
 import { BiPencil, BiSearchAlt2, BiX } from "react-icons/bi";
 import { useDispatch, useSelector } from "react-redux";
 import "react-toastify/dist/ReactToastify.css";
-import { toast } from "react-toastify";
 import AdminLayout from "../../../component/admin/AdminLayout/AdminLayout";
 import { deleteUser, getAllUser } from "../../../redux/slices/userSlice";
 import AddEditUser from "./AddEditUser/AddEditUser";
 import { useStyles } from "./styles";
-import { confirmAlert } from "react-confirm-alert";
-import "react-confirm-alert/src/react-confirm-alert.css";
+import { toast, ToastContainer } from 'react-toastify';
+
 const User = () => {
   const classes = useStyles();
   const dispatch = useDispatch();
@@ -58,6 +57,36 @@ const User = () => {
     setOpen2(false);
   };
 
+  // Modal Confirm Delete
+  const [showConfirmDeleteModal, setShowConfirmDeleteModal] = useState(false);
+  const [userToDelete, setUserToDelete] = useState(null);
+
+  const handleOpenConfirmDeleteModal = (user) => {
+    setUserToDelete(user);
+    setShowConfirmDeleteModal(true);
+  };
+
+  const handleCancelDelete = () => {
+    setShowConfirmDeleteModal(false);
+    setUserToDelete(null);
+  };
+
+  const handleConfirmDelete = async () => {
+    setShowConfirmDeleteModal(true)
+    if (userToDelete) {
+      try {
+        const action = deleteUser(userToDelete.id);
+        const resultAction = await dispatch(action);
+        unwrapResult(resultAction);
+        toast.success("User deleted successfully!");
+      } catch (error) {
+        toast.error("Failed to delete user!");
+      }
+    }
+    setShowConfirmDeleteModal(false);
+    setUserToDelete(null);
+  };
+
   // Search
   const [filteredUsers, setFilteredUsers] = useState(users);
   const searchRef = useRef("");
@@ -65,19 +94,15 @@ const User = () => {
     const value = e.target.value;
 
     if (searchRef.current) {
-        clearTimeout(searchRef.current);
+      clearTimeout(searchRef.current);
     }
 
     searchRef.current = setTimeout(() => {
-        const searchParam = value.trim();
-
-        // Gọi API với query string đúng định dạng
-        const params = searchParam ? `?search=${encodeURIComponent(searchParam)}` : '';
-        dispatch(getAllUser(params)); // Gọi API với chuỗi tìm kiếm
-    }, 400); // Đặt timeout delay tìm kiếm
-};
-
-  
+      const searchParam = value.trim();
+      const params = searchParam ? `?search=${encodeURIComponent(searchParam)}` : '';
+      dispatch(getAllUser(params));
+    }, 400);
+  };
 
   // Pagination
   const [page, setPage] = useState(0);
@@ -114,49 +139,6 @@ const User = () => {
     }
   };
 
-  const handleDeleteUser = (id) => {
-    confirmAlert({
-      title: "Xác nhận xóa",
-      message: "Bạn có chắc chắn muốn xóa người dùng này không?",
-      buttons: [
-        {
-          label: "Yes",
-          onClick: () => {
-            const action = deleteUser(id);
-            dispatch(action)
-              .then(unwrapResult)
-              .then(() => {
-                const action2 = getAllUser();
-                dispatch(action2);
-  
-                toast("Xóa người dùng thành công!", {
-                  position: "bottom-center",
-                  autoClose: 3000,
-                  hideProgressBar: false,
-                  closeOnClick: true,
-                  pauseOnHover: true,
-                  draggable: true,
-                  progress: undefined,
-                  type: "success",
-                });
-              })
-              .catch((error) => {
-                console.log(error);
-              });
-          },
-        },
-        {
-          label: "No",
-          onClick: () => {
-            toast.info("Hủy xóa người dùng", {
-              position: "bottom-center",
-              autoClose: 2000,
-            });
-          },
-        },
-      ],
-    });
-  };
   useEffect(() => {
     setFilteredUsers(users);
   }, [users]);
@@ -222,7 +204,7 @@ const User = () => {
                   <TableBody>
                     {filteredUsers.map((user) => {
                       return (
-                        <TableRow>
+                        <TableRow key={user.id}>
                           <TableCell
                             component="th"
                             scope="row"
@@ -253,7 +235,7 @@ const User = () => {
                             <BiX
                               style={{ cursor: "pointer", fontSize: 20 }}
                               onClick={() => {
-                                handleDeleteUser(user.id);
+                                handleOpenConfirmDeleteModal(user);
                               }}
                             />
                           </TableCell>
@@ -292,20 +274,26 @@ const User = () => {
             </Box>
           )}
         </form>
-        {/* <ToastContainer
-          position="bottom-center"
-          autoClose={3000}
-          hideProgressBar={false}
-          newestOnTop={false}
-          closeOnClick
-          rtl={false}
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-          theme="dark"
-          type="default"
-        /> */}
       </AdminLayout>
+      
+      {/* Modal xác nhận xóa người dùng */}
+      {showConfirmDeleteModal && (
+        <Box className={classes.confirmDeleteModal}>
+          <Typography>
+            Bạn có chắc chắn muốn xóa người dùng này?
+          </Typography>
+          <Box>
+            <Button onClick={handleConfirmDelete} color="secondary">
+              Yes
+            </Button>
+            <Button onClick={handleCancelDelete} color="primary">
+              No
+            </Button>
+          </Box>
+        </Box>
+      )}
+
+      <ToastContainer />
     </>
   );
 };
