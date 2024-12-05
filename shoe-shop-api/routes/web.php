@@ -42,6 +42,12 @@ Route::get('/auth/google/callback', function () {
             ]);
         }
 
+        // Nếu người dùng chưa có mật khẩu, tạo mật khẩu mặc định
+        if (is_null($existingUser->password)) {
+            $existingUser->update([
+                'password' => bcrypt('12345678'),
+            ]);
+        }
         // Tạo token
         $token = $existingUser->createToken('user')->plainTextToken;
         $user = $existingUser;

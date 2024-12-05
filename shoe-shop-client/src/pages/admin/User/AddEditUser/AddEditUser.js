@@ -73,7 +73,7 @@ const AddEditUser = ({ open, handleClose, user, handleData }) => {
   const handleUpdateUser = async () => {
     const newUser = {
       is_admin: value === "true" ? 1 : 0, // Chuyển từ "true"/"false" thành 1/0
-      _id: user.id, // Thêm id người dùng để xác định bản ghi cần cập nhật
+      id: user.id, // Thêm id người dùng để xác định bản ghi cần cập nhật
     };
 
     try {
