@@ -24,7 +24,8 @@ import AdminLayout from "../../../component/admin/AdminLayout/AdminLayout";
 import { deleteUser, getAllUser } from "../../../redux/slices/userSlice";
 import AddEditUser from "./AddEditUser/AddEditUser";
 import { useStyles } from "./styles";
-
+import { confirmAlert } from "react-confirm-alert";
+import "react-confirm-alert/src/react-confirm-alert.css";
 const User = () => {
   const classes = useStyles();
   const dispatch = useDispatch();
@@ -114,29 +115,48 @@ const User = () => {
   };
 
   const handleDeleteUser = (id) => {
-    const action = deleteUser(id);
-    dispatch(action)
-      .then(unwrapResult)
-      .then(() => {
-        const action2 = getAllUser();
-        dispatch(action2);
-
-        toast("Xóa người dùng thành công!", {
-          position: "bottom-center",
-          autoClose: 3000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          progress: undefined,
-          type: "success",
-        });
-      })
-      .catch((error) => {
-        console.log(error);
-      });
+    confirmAlert({
+      title: "Xác nhận xóa",
+      message: "Bạn có chắc chắn muốn xóa người dùng này không?",
+      buttons: [
+        {
+          label: "Yes",
+          onClick: () => {
+            const action = deleteUser(id);
+            dispatch(action)
+              .then(unwrapResult)
+              .then(() => {
+                const action2 = getAllUser();
+                dispatch(action2);
+  
+                toast("Xóa người dùng thành công!", {
+                  position: "bottom-center",
+                  autoClose: 3000,
+                  hideProgressBar: false,
+                  closeOnClick: true,
+                  pauseOnHover: true,
+                  draggable: true,
+                  progress: undefined,
+                  type: "success",
+                });
+              })
+              .catch((error) => {
+                console.log(error);
+              });
+          },
+        },
+        {
+          label: "No",
+          onClick: () => {
+            toast.info("Hủy xóa người dùng", {
+              position: "bottom-center",
+              autoClose: 2000,
+            });
+          },
+        },
+      ],
+    });
   };
-
   useEffect(() => {
     setFilteredUsers(users);
   }, [users]);
